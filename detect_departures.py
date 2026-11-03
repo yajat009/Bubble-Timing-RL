@@ -1,6 +1,6 @@
 # Find the frames where a bubble leaves the heater wall, using the vapor region of one BubbleML file.
 # Writes departures_<name>.npy (frame indices) and departures_<name>.png.
-import os, sys, h5py, numpy as np
+import os, sys, json, h5py, numpy as np
 from scipy import ndimage
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -12,6 +12,8 @@ WALL_ROWS = 2    # a vapor blob that touches the bottom 2 pixel rows is attached
 GROW = 6         # pixels. A bubble moves between frames, so we match it to the next frame with a grown (dilated) mask.
 MIN_AREA = 200   # pixels. Smaller wall blobs are short-lived nucleation spots, not bubbles.
 KEEP_FRAC = 0.3  # a detached blob counts as the same bubble only if it keeps at least this share of the area
+DEBOUNCE_TIME = 1.0  # time units. A new event within this time of an earlier event at the same place is the same departure.
+DEBOUNCE_PX = 10     # pixels. "The same place" means within this x distance.
 
 if os.path.exists(CACHE):
     vapor = np.load(CACHE)
@@ -20,6 +22,14 @@ else:
         vapor = f["dfun"][()] > 0
     np.save(CACHE, vapor)
 T = len(vapor)
+
+# Time between saved frames. BubbleML 2.0 files have a .json with the time range; BubbleML v1 files do not (1.0 per frame).
+meta = PATH.replace(".hdf5", ".json")
+FRAME_DT = 1.0
+if os.path.exists(meta):
+    j = json.load(open(meta))
+    FRAME_DT = (j["t_final"] - j["t_initial"]) / (T - 1)
+debounce_frames = round(DEBOUNCE_TIME / FRAME_DT)
 
 def label(frame):
     lab, n = ndimage.label(frame)
@@ -48,6 +58,18 @@ for t in range(1, T):
             events.append((t, int(np.nonzero(blob)[1].mean())))
     prev_lab, prev_att = lab, att
 
+# At fine frame spacing (0.1 time units) a bubble can hover at the wall: it touches, lifts by one row,
+# and touches again. Each lift looks like a departure. Keep only the first event of such a sequence.
+# An event is dropped if any earlier event (kept or dropped) is within DEBOUNCE_PX in x and
+# debounce_frames in time, so a bubble that bounces many times still gives one departure.
+kept, seen = [], []
+for t, x in sorted(events):
+    if not any(t - ts <= debounce_frames and abs(x - xs) <= DEBOUNCE_PX for ts, xs in seen):
+        kept.append((t, x))
+    seen.append((t, x))
+print(f"frame spacing {FRAME_DT} time units; debounce {debounce_frames} frames: {len(events)} raw events -> {len(kept)} departures")
+events = kept
+np.save(f"departures_{NAME}_events.npy", np.array(events))  # (frame, x pixel) per departure, for per-site analysis
 times = np.array(sorted({t for t, _ in events}))  # keep each frame once, even if several bubbles leave in it
 print(NAME)
 print(f"{len(events)} departure events in {len(times)} distinct frames, T={T}")

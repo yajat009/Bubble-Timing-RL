@@ -1,5 +1,10 @@
 # Can a short window of frames show when the last bubble left? A feasibility check
 
+> **Dataset note (added after T0).** This file reports results on **BubbleML v1** (1.0 time units per frame).
+> The project uses **BubbleML 2.0** (0.1 time units per frame, the data Bubbleformer uses).
+> These results do not transfer directly. See `analysis/T0_DATA_ALIGNMENT.md`.
+
+
 ## Question
 
 We want to test a reward for reinforcement learning (RL) that depends on bubble departure timing.

@@ -1,0 +1,7 @@
+# V100 (CC 7.0) needs the cu126 build: pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu126 --extra-index-url https://pypi.org/simple
+# env lives at /pub/ynagaraj/envs/bubble
+h5py==3.16.0
+matplotlib==3.11.2
+numpy==2.4.6
+scipy==1.17.1
+torch==2.14.1+cu126

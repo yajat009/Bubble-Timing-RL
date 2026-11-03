@@ -1,5 +1,7 @@
 # Test plan: what each upcoming test must provide or prove
 
+> **Paths (repo reorganized after this was written).** `RESULTS.md` is now `results/v1/RESULTS.md`, scripts are in `scripts/` (`probe.py` is `scripts/probe_v1.py`), and BubbleML v1 outputs are in `results/v1/`. Code quotes and line numbers refer to commit `4461f46`.
+
 This plan follows from `CURRENT_RESULTS.md`.
 Every pass criterion below is set now, before any of these tests runs.
 A test that misses its criterion counts as failed, even if the miss is small.

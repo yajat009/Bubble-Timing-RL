@@ -1,5 +1,8 @@
 # Find the frames where a bubble leaves the heater wall, using the vapor region of one BubbleML file.
-# Writes departures_<name>.npy (frame indices) and departures_<name>.png.
+# Usage (from the repo root): python scripts/detect_departures.py <path to .hdf5> [output folder]
+# The .hdf5 file itself is not needed if <name>_vapor.npy exists next to it.
+# Writes departures_<name>.npy (frames), departures_<name>_events.npy (frame, x pixel), and departures_<name>.png
+# to results/v2 for BubbleML 2.0 files (they have a .json) or results/v1 otherwise.
 import os, sys, json, h5py, numpy as np
 from scipy import ndimage
 import matplotlib; matplotlib.use("Agg")
@@ -30,6 +33,7 @@ if os.path.exists(meta):
     j = json.load(open(meta))
     FRAME_DT = (j["t_final"] - j["t_initial"]) / (T - 1)
 debounce_frames = round(DEBOUNCE_TIME / FRAME_DT)
+OUT = sys.argv[2] if len(sys.argv) > 2 else ("results/v2" if os.path.exists(meta) else "results/v1")  # run from the repo root
 
 def label(frame):
     lab, n = ndimage.label(frame)
@@ -69,7 +73,7 @@ for t, x in sorted(events):
     seen.append((t, x))
 print(f"frame spacing {FRAME_DT} time units; debounce {debounce_frames} frames: {len(events)} raw events -> {len(kept)} departures")
 events = kept
-np.save(f"departures_{NAME}_events.npy", np.array(events))  # (frame, x pixel) per departure, for per-site analysis
+np.save(f"{OUT}/departures_{NAME}_events.npy", np.array(events))  # (frame, x pixel) per departure, for per-site analysis
 times = np.array(sorted({t for t, _ in events}))  # keep each frame once, even if several bubbles leave in it
 print(NAME)
 print(f"{len(events)} departure events in {len(times)} distinct frames, T={T}")
@@ -77,7 +81,7 @@ print("frames:", times.tolist())
 gaps = np.diff(times)
 print("inter-departure intervals:", gaps.tolist())
 print(f"interval mean={gaps.mean():.2f} median={np.median(gaps):.1f} min={gaps.min()} max={gaps.max()}")
-np.save(f"departures_{NAME}.npy", times)
+np.save(f"{OUT}/departures_{NAME}.npy", times)
 
 fig, ax = plt.subplots(1, 3, figsize=(15, 4))
 ax[0].imshow(vapor[:, 0, :].T, origin="lower", aspect="auto", cmap="gray_r", extent=[0, T, 0, vapor.shape[2]])
@@ -86,4 +90,4 @@ ax[0].set(title="wall-row vapor (black) + departures (red)", xlabel="frame", yla
 ax[1].plot(vapor.mean(axis=(1, 2))); ax[1].vlines(times, 0, vapor.mean(), colors="r", lw=0.6)
 ax[1].set(title="vapor fraction", xlabel="frame")
 ax[2].hist(gaps, bins=range(1, gaps.max() + 2)); ax[2].set(title="inter-departure interval", xlabel="frames")
-plt.tight_layout(); plt.savefig(f"departures_{NAME}.png", dpi=110)
+plt.tight_layout(); plt.savefig(f"{OUT}/departures_{NAME}.png", dpi=110)

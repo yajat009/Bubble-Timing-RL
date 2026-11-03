@@ -1,7 +1,7 @@
 # T0: data alignment with BubbleML 2.0
 
 This test checks whether the project's data (BubbleML 2.0, used by Bubbleformer) matches the BubbleML v1 data used for the first results.
-It does not match. The results in `RESULTS.md` do not apply directly to the project.
+It does not match. The results in `results/v1/RESULTS.md` do not apply directly to the project.
 
 Statement types: **measured** (computed here), **source** (read from a primary file), **assumption**, **recommendation**.
 
@@ -57,7 +57,7 @@ The window is set in time units, so it means the same thing for both datasets.
 
 **Rule violation.** These two values were chosen after looking at Twall 100. T1 must validate them on other files, with the values frozen.
 
-**Not re-run.** The BubbleML v1 departure files (`departures_Twall-*.npy`) were made before the debounce was added (commit `4461f46`). They are unchanged.
+**Not re-run.** The BubbleML v1 departure files (`results/v1/departures_Twall-*.npy`) were made before the debounce was added (commit `4461f46`). They are unchanged.
 
 ### 3.2 Results
 
@@ -76,7 +76,7 @@ All numbers are measured. "After frame 100" applies Bubbleformer's start time.
 | Per-site mean interval, median (range) | 145 frames (70-329) | 153 frames (84-244) |
 | Per-site CV, median | 0.97 | 0.93 |
 
-Files: `departures_Twall_97*.npy`, `departures_Twall_97.png`, `departures_Twall_100*.npy`, `departures_Twall_100.png`.
+Files (in `results/v2/`): `departures_Twall_97*.npy`, `departures_Twall_97.png`, `departures_Twall_100*.npy`, `departures_Twall_100.png`.
 The `_events.npy` files hold (frame, x pixel) for each departure.
 
 ### 3.3 What the results mean

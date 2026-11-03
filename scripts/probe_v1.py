@@ -1,3 +1,4 @@
+# BubbleML v1 only. Run from the repo root.
 # Feasibility probe: can 5 consecutive frames predict the time to the next bubble departure?
 # Models, tested leave-one-file-out (each test file is a wall temperature the model never saw):
 #   baseline: always predict the mean training target
@@ -20,7 +21,7 @@ def load(name):
     v = np.load(f"{D}/{name}_vapor.npy").astype(np.float32)   # vapor mask, shape (T, 384, 384)
     T = len(v)
     v = v.reshape(T, 96, 4, 96, 4).mean(axis=(2, 4))          # shrink each frame 4x
-    deps = np.load(f"departures_{name}.npy")
+    deps = np.load(f"results/v1/departures_{name}.npy")
     X, since, until = [], [], []
     for t in range(W - 1, T):                                 # window = frames t-W+1 ... t
         past, future = deps[deps <= t], deps[deps > t]
@@ -86,4 +87,4 @@ ax[0].set_xticks(np.arange(4) + 0.3); ax[0].set_xticklabels(FILES)
 ax[0].set(ylabel="test MAE (frames)", title="per test file (error bar = std over seeds)"); ax[0].legend()
 ax[1].bar(list(overall), [v.mean() for v in overall.values()], yerr=[v.std() for v in overall.values()])
 ax[1].set(ylabel="test MAE (frames)", title="mean over test files"); ax[1].tick_params(axis="x", rotation=20)
-plt.tight_layout(); plt.savefig("probe.png", dpi=110)
+plt.tight_layout(); plt.savefig("results/v1/probe.png", dpi=110)

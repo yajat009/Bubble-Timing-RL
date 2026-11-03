@@ -24,7 +24,7 @@ If it does not, no RL method can recover the timing from those frames.
 
 ## Method
 
-### 1. Find departures (`detect_departures.py`)
+### 1. Find departures (`scripts/detect_departures.py`, before the debounce was added)
 
 1. Label each connected vapor region (a blob) in each frame.
 2. A blob that touches the bottom two pixel rows is attached to the heater.
@@ -45,7 +45,7 @@ Each file has fewer than the 20-50 departures we aimed for.
 The four files together have 63.
 Plots: `departures_Twall-100.png`, `departures_Twall-103.png`, `departures_Twall-106.png`, `departures_Twall-110.png`.
 
-### 2. Train the probe (`probe.py`)
+### 2. Train the probe (`scripts/probe_v1.py`)
 
 - Input: 5 consecutive vapor-mask frames, each shrunk to 96 x 96 pixels and stacked as channels.
 - Target: the number of frames from the last input frame until the next departure.
@@ -111,10 +111,10 @@ Second, the data is small (about 180 samples per file, 4 files, 5 seeds), and th
 | File | Purpose |
 |---|---|
 | `requirements.txt` | Python packages. The comment inside explains the CUDA 12.6 build that the V100 GPU needs. |
-| `download.py` | Downloads the first N HDF5 files from the BubbleML archive. |
-| `inspect_file.py` | Prints the fields, shapes, and key parameters of one file. |
-| `detect_departures.py` | Finds departure frames and writes `departures_<name>.npy` and `.png`. |
-| `probe.py` | Trains and tests the probe models and writes `probe.png`. |
+| `scripts/download_v1.py` | Downloads the first N HDF5 files from the BubbleML archive. |
+| `scripts/inspect_v1.py` | Prints the fields, shapes, and key parameters of one file. |
+| `scripts/detect_departures.py` | Finds departure frames. The v1 departure files were made with the version at commit `4461f46`, before the debounce was added. |
+| `scripts/probe_v1.py` | Trains and tests the probe models and writes `probe.png`. |
 | `departures_*.npy`, `departures_*.png` | Departure frames and plots for each file. |
 | `probe.png` | Probe results plot. |
 
@@ -124,7 +124,8 @@ Data files are in `/pub/ynagaraj/bubbleml` and are not in this repository.
 
 ```
 pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu126 --extra-index-url https://pypi.org/simple
-python download.py 4
-for t in 100 103 106 110; do python detect_departures.py /pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D/Twall-$t.hdf5; done
-python probe.py
+python scripts/download_v1.py 4
+git checkout 4461f46 -- detect_departures.py   # the detector version used here
+for t in 100 103 106 110; do python detect_departures.py /pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D/Twall-$t.hdf5; done   # then move the outputs to results/v1/
+python scripts/probe_v1.py
 ```

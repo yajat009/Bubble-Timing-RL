@@ -1,3 +1,5 @@
+# Find the frames where a bubble leaves the heater wall, using the vapor region of one BubbleML file.
+# Writes departures_<name>.npy (frame indices) and departures_<name>.png.
 import os, sys, h5py, numpy as np
 from scipy import ndimage
 import matplotlib; matplotlib.use("Agg")
@@ -5,11 +7,11 @@ import matplotlib.pyplot as plt
 
 PATH = sys.argv[1] if len(sys.argv) > 1 else "/pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D/Twall-100.hdf5"
 NAME = os.path.basename(PATH).replace(".hdf5", "")
-CACHE = PATH.replace(".hdf5", "_vapor.npy")  # bool (T,Y,X); reading dfun from hdf5 is slow
-WALL_ROWS = 2    # a blob touching the first rows is attached to the heater
-GROW = 6         # px; blobs move between frames, so match with a dilated mask
-MIN_AREA = 200   # px; smaller wall blobs are nucleation flicker, not bubbles
-KEEP_FRAC = 0.3  # the detached successor must keep this share of the bubble's area
+CACHE = PATH.replace(".hdf5", "_vapor.npy")  # vapor mask, bool (T, Y, X). Saved because reading dfun from the HDF5 file is slow.
+WALL_ROWS = 2    # a vapor blob that touches the bottom 2 pixel rows is attached to the heater
+GROW = 6         # pixels. A bubble moves between frames, so we match it to the next frame with a grown (dilated) mask.
+MIN_AREA = 200   # pixels. Smaller wall blobs are short-lived nucleation spots, not bubbles.
+KEEP_FRAC = 0.3  # a detached blob counts as the same bubble only if it keeps at least this share of the area
 
 if os.path.exists(CACHE):
     vapor = np.load(CACHE)
@@ -24,9 +26,12 @@ def label(frame):
     attached = np.unique(lab[:WALL_ROWS][lab[:WALL_ROWS] > 0])
     return lab, attached
 
-# Departure at frame t: a bubble attached at t-1 whose main body (the blob it overlaps most
-# at t) is off the wall. Small stubs left on the wall are ignored; if the main body is
-# tiny the bubble collapsed or fragmented, which is not a departure.
+# A departure at frame t means: a bubble was attached to the wall at frame t-1,
+# and at frame t its main body is off the wall. The main body is the blob that overlaps
+# the old bubble the most.
+# - Small stubs left on the wall after the bubble lifts off do not count against the departure.
+# - If the main body is much smaller than the old bubble, the bubble collapsed or broke up.
+#   We do not count that as a departure.
 events = []  # (t, x_pixel)
 prev_lab, prev_att = label(vapor[0])
 for t in range(1, T):
@@ -43,7 +48,7 @@ for t in range(1, T):
             events.append((t, int(np.nonzero(blob)[1].mean())))
     prev_lab, prev_att = lab, att
 
-times = np.array(sorted({t for t, _ in events}))  # several blobs may leave in one frame
+times = np.array(sorted({t for t, _ in events}))  # keep each frame once, even if several bubbles leave in it
 print(NAME)
 print(f"{len(events)} departure events in {len(times)} distinct frames, T={T}")
 print("frames:", times.tolist())

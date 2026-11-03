@@ -1,3 +1,5 @@
+# Print the fields, shapes, and a few key parameters of one BubbleML HDF5 file.
+# Usage: python inspect_file.py [path]
 import sys, h5py
 
 path = sys.argv[1] if len(sys.argv) > 1 else "/pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D/Twall-100.hdf5"

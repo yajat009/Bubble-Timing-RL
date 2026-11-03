@@ -1,4 +1,7 @@
-# Stream the 10.5 GB BubbleML archive and extract only the first HDF5 file(s), then stop.
+# Download the first N HDF5 files (default 1) from the 10.5 GB BubbleML subcooled pool boiling archive.
+# Usage: python download.py [N]
+# The archive is one .tar.gz, so the script streams it and stops after N files instead of saving all of it.
+# Files already on disk are skipped, but the stream still reads past them.
 import os, sys, tarfile, urllib.request
 
 URL = "https://bubble-ml-simulations.s3.us-east-2.amazonaws.com/pool-boiling-subcooled-fc72-2d.tar.gz"

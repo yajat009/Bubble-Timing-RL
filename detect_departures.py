@@ -4,6 +4,7 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 PATH = sys.argv[1] if len(sys.argv) > 1 else "/pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D/Twall-100.hdf5"
+NAME = os.path.basename(PATH).replace(".hdf5", "")
 CACHE = PATH.replace(".hdf5", "_vapor.npy")  # bool (T,Y,X); reading dfun from hdf5 is slow
 WALL_ROWS = 2    # a blob touching the first rows is attached to the heater
 GROW = 6         # px; blobs move between frames, so match with a dilated mask
@@ -43,12 +44,13 @@ for t in range(1, T):
     prev_lab, prev_att = lab, att
 
 times = np.array(sorted({t for t, _ in events}))  # several blobs may leave in one frame
+print(NAME)
 print(f"{len(events)} departure events in {len(times)} distinct frames, T={T}")
 print("frames:", times.tolist())
 gaps = np.diff(times)
 print("inter-departure intervals:", gaps.tolist())
 print(f"interval mean={gaps.mean():.2f} median={np.median(gaps):.1f} min={gaps.min()} max={gaps.max()}")
-np.save("departures.npy", times)
+np.save(f"departures_{NAME}.npy", times)
 
 fig, ax = plt.subplots(1, 3, figsize=(15, 4))
 ax[0].imshow(vapor[:, 0, :].T, origin="lower", aspect="auto", cmap="gray_r", extent=[0, T, 0, vapor.shape[2]])
@@ -57,4 +59,4 @@ ax[0].set(title="wall-row vapor (black) + departures (red)", xlabel="frame", yla
 ax[1].plot(vapor.mean(axis=(1, 2))); ax[1].vlines(times, 0, vapor.mean(), colors="r", lw=0.6)
 ax[1].set(title="vapor fraction", xlabel="frame")
 ax[2].hist(gaps, bins=range(1, gaps.max() + 2)); ax[2].set(title="inter-departure interval", xlabel="frames")
-plt.tight_layout(); plt.savefig("departures.png", dpi=110)
+plt.tight_layout(); plt.savefig(f"departures_{NAME}.png", dpi=110)

@@ -33,6 +33,7 @@ This repository currently holds the **feasibility checks** that come before any 
 | `scripts/probe_v1.py` | v1 | Tests whether 5 frames predict the time to the next departure. |
 | `scripts/probe_v2.py` | 2.0 | T3 probe: the same test with Bubbleformer's 4 fields and train/test split. |
 | `scripts/median_baseline_v2.py` | 2.0 | Median baseline for the T3 probe. |
+| `scripts/rollout_timing_v2.py` | 2.0 | Rolls out the published Bubbleformer-S and compares its departure timing and heat flux with the simulation. |
 
 ## Documents
 

@@ -1,0 +1,3 @@
+training mean = 11.18: test MAE all 7.04, irregular 10.32
+training median = 7.00: test MAE all 6.52, irregular 12.27
+best constant on the test file itself (its median, an unfair lower bound): MAE 6.49

@@ -125,3 +125,65 @@ Against the median:
 | `probe_v2.png` | Bar plots of the results (mean baseline only). |
 | `median_baseline_v2.log` | Output of `scripts/median_baseline_v2.py`. |
 | `departures_Twall_<T>*` | Departures per file (section 1). |
+
+## 6. T6: does the published Bubbleformer-S get the timing wrong? (Twall 97)
+
+### Method
+
+`scripts/rollout_timing_v2.py` (added in commit `0a54581`).
+
+- Model: the published checkpoint `Bubbleformer-S-PB-Subcooled.ckpt` from Hugging Face (`hpcforge/Bubbleformer`), with model code from `github.com/HPCForge/Bubbleformer` at commit `8d1dade`.
+- Start: simulation frames 100-104 of Twall 97 (Bubbleformer's validation file, not used in its training).
+- Rollout: 379 steps of 5 frames, each prediction fed back as the next input, giving frames 105-1999 (189.5 time units). One rollout; the model is deterministic.
+- Comparison: the same statistics on the simulation over the same frames. For scale: the simulation's second half against its first half (noise floor), and the simulations at Twall 96 and 98 (what a 1-degree error looks like).
+- Heat flux: a proxy with Bubbleformer's formula on the 128 x 128 fields. Fair for comparison, not the exact heat flux.
+- Cost: the rollout took 47 s on one V100. The whole script took about 25 minutes, mostly statistics and reads from `/pub`.
+
+**Change to the script.** The original loaded the checkpoint with `torch.load(..., weights_only=False)`, which can run any code stored in the file. The permission system blocked that. The script now uses a restricted unpickler: it allows only torch's own safe list plus the 10 classes this checkpoint needs (omegaconf configs and plain containers). PyTorch's built-in `weights_only=True` could not be used, because it cannot fill the `defaultdict` in this checkpoint.
+
+### Results
+
+**Measured.** From `rollout_timing_Twall_97.md`. "To sim" columns are distances from the Twall 97 simulation; 0 is a perfect match.
+
+| Statistic | Rollout | Simulation 97 | Noise floor (sim halves) | Simulation 96 | Simulation 98 |
+|---|---|---|---|---|---|
+| Departures | **28** | 157 | 82 (one half) | 149 | 191 |
+| Departures per 100 frames | **1.48** | 8.28 | 8.65 | 7.86 | 10.1 |
+| Mean interval (frames) | **68.3** | 12.0 | 11.5 | 12.8 | 9.86 |
+| Interval CV | 1.82 | 0.80 | 0.87 | 0.82 | 0.81 |
+| Interval W1 to sim (frames) | **46.3** | 0 | 2.08 | 1.01 | 2.14 |
+| Heat-flux mean | 44,200 | 47,300 | 47,200 | 46,400 | 49,700 |
+| Heat-flux histogram W1 to sim | 3,100 | 0 | 409 | 909 | 2,480 |
+| Heat-flux autocorrelation RMS diff | **0.461** | 0 | 0.119 | 0.069 | 0.113 |
+| Event-response RMS diff | 2,340 | 0 | 840 | 1,340 | 2,130 |
+| Vapor fraction | 0.0225 | 0.0263 | 0.0278 | 0.0258 | 0.0288 |
+
+**Measured, extra check** (not in the script; computed from the saved vapor masks, every 10th frame):
+
+| Frames | Wall coverage (sim / rollout) | Bubbles in domain (sim / rollout) | Bubbles on the wall (sim / rollout) |
+|---|---|---|---|
+| 105-404 | 0.42 / 0.34 | 19.9 / 28.9 | 11.6 / 9.6 |
+| 405-704 | 0.44 / 0.31 | 20.2 / 15.0 | 10.9 / 7.3 |
+| 705-1004 | 0.44 / 0.36 | 21.2 / 11.1 | 12.3 / 7.1 |
+| 1005-1304 | 0.46 / 0.33 | 23.1 / 15.5 | 13.1 / 6.3 |
+| 1305-1604 | 0.45 / 0.30 | 22.6 / 14.7 | 14.3 / 7.1 |
+| 1605-1904 | 0.41 / 0.23 | 25.2 / 14.8 | 13.5 / 6.2 |
+
+![Rollout vs simulation](rollout_timing_Twall_97.png)
+
+### What it means
+
+- **The baseline gets the timing wrong, by far more than the noise.** The rollout has 5.6 times fewer departures than the simulation. Its interval distribution is 46 frames (W1) from the simulation's, against a noise floor of 2 frames and a 1-degree Twall change of 1-2 frames. Its heat-flux autocorrelation is about 4 times farther from the simulation than the noise floor.
+- **This is not a detector artifact.** The bubble counts in the extra check do not use the departure detector. After about frame 400, the rollout has about half as many bubbles on the wall and in the domain.
+- **The model loses boiling activity, not bubble shape.** The rollout's bubbles do not form a vapor layer on the wall: wall coverage is lower than in the simulation. Its heat flux is still lower, so the fluid near the wall must be warmer in the rollout (interpretation; temperature was not checked directly).
+- **The heat-flux mean is close** (44,200 against 47,300; 7% low). A reward on the snapshot mean alone would see a small error. The timing statistics see a large one. This is the motivation the project needs for R3.
+
+**T6 pass criterion 2** (the baseline's R3 error at the held-out Twall is above the noise floor for at least one statistic): **passes**, for the interval W1, the autocorrelation, and the event response.
+**T6 pass criterion 1** (reproduce the reported 10-frame accuracy): **not tested**.
+
+### Limits
+
+- One rollout, from one start state. The plan asks for 5 start states.
+- The detector is not validated (T1), and predicted bubbles may have softer edges than simulated ones. The detector-free bubble counts support the result.
+- The heat flux is a proxy on 128 x 128 fields.
+- Bubbleformer's reported accuracy was not reproduced, so a setup error (for example in the input normalization or the conditioning values) cannot be ruled out. Already in frames 105-404 the rollout differs from the simulation: more bubbles in the domain (28.9 against 19.9) and less wall coverage (0.34 against 0.42). Checking the one-step and 10-frame accuracy against the paper's values is the next step before trusting this result.

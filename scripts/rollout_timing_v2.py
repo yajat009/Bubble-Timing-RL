@@ -53,7 +53,36 @@ frames = range(first, first + args.frames)
 def load_model(path, dev):
     """Build the model from a Bubbleformer checkpoint, as in Bubbleformer's scripts/inference.py."""
     from bubbleformer.models import get_model
-    ck = torch.load(path, map_location="cpu", weights_only=False)
+    import importlib, pickle, types, torch._weights_only_unpickler as wu
+    # Load safely: the file may create only allow-listed classes, so it cannot run other code while it is read.
+    # torch's weights_only=True loader cannot be used, because it cannot fill the defaultdict in this checkpoint.
+    # The allow list is torch's own safe list plus the classes this checkpoint needs for its omegaconf settings
+    # (listed by torch.serialization.get_unsafe_globals_in_checkpoint).
+    extra = ["omegaconf.listconfig.ListConfig", "omegaconf.dictconfig.DictConfig", "omegaconf.base.ContainerMetadata",
+             "omegaconf.base.Metadata", "omegaconf.nodes.AnyNode", "collections.defaultdict", "typing.Any",
+             "builtins.list", "builtins.dict", "builtins.int"]
+    allowed = dict(wu._get_allowed_globals())
+    for key in extra:
+        mod, attr = key.rsplit(".", 1)
+        allowed[key] = getattr(importlib.import_module(mod), attr)
+
+    import _compat_pickle
+
+    class Restricted(pickle.Unpickler):
+        def find_class(self, module, name):
+            # Old pickle protocols use Python 2 names (for example __builtin__.dict). Translate them first,
+            # as the standard unpickler does.
+            if (module, name) in _compat_pickle.NAME_MAPPING:
+                module, name = _compat_pickle.NAME_MAPPING[(module, name)]
+            elif module in _compat_pickle.IMPORT_MAPPING:
+                module = _compat_pickle.IMPORT_MAPPING[module]
+            key = f"{module}.{name}"
+            if key not in allowed:
+                raise pickle.UnpicklingError(f"checkpoint uses a class that is not allowed: {key}")
+            return allowed[key]
+
+    restricted = types.SimpleNamespace(Unpickler=Restricted, load=pickle.load, __name__="restricted_pickle")
+    ck = torch.load(path, map_location="cpu", weights_only=False, pickle_module=restricted)
     hp = ck["hyper_parameters"]
     params = dict(hp["model_cfg"]["params"])
     params["input_fields"] = len(hp["data_cfg"]["input_fields"])

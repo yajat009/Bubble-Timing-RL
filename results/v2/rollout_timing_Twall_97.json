@@ -1,0 +1,67 @@
+{
+ "Bubbleformer rollout": {
+  "departures": 28.0,
+  "departures per 100 frames": 1.4775725593667546,
+  "mean interval (frames)": 68.25925925925925,
+  "interval CV": 1.8173628039598897,
+  "interval W1 to sim (frames)": 46.34965000000001,
+  "heat flux mean": 44218.82558828281,
+  "heat flux std": 6734.068388696706,
+  "heat flux histogram W1 to sim": 3102.404923469389,
+  "heat flux ACF RMS diff to sim": 0.46089662158241074,
+  "event response RMS diff to sim": 2343.269791505985,
+  "vapor fraction": 0.022501590698564274
+ },
+ "simulation Twall 97": {
+  "departures": 157.0,
+  "departures per 100 frames": 8.284960422163588,
+  "mean interval (frames)": 12.025641025641026,
+  "interval CV": 0.8008149567193787,
+  "interval W1 to sim (frames)": 0.0,
+  "heat flux mean": 47267.74266329223,
+  "heat flux std": 5797.95442829196,
+  "heat flux histogram W1 to sim": 0.0,
+  "heat flux ACF RMS diff to sim": 0.0,
+  "event response RMS diff to sim": 0.0,
+  "vapor fraction": 0.026300167597063613
+ },
+ "sim, 2nd half vs 1st half": {
+  "departures": 82.0,
+  "departures per 100 frames": 8.649789029535865,
+  "mean interval (frames)": 11.481481481481481,
+  "interval CV": 0.8738780528178232,
+  "interval W1 to sim (frames)": 2.076700000000001,
+  "heat flux mean": 47236.409519504006,
+  "heat flux std": 5750.27918931575,
+  "heat flux histogram W1 to sim": 409.00820280612317,
+  "heat flux ACF RMS diff to sim": 0.1194846916392434,
+  "event response RMS diff to sim": 839.5716140421353,
+  "vapor fraction": 0.027751765673673604
+ },
+ "simulation Twall 96": {
+  "departures": 149.0,
+  "departures per 100 frames": 7.862796833773087,
+  "mean interval (frames)": 12.79054054054054,
+  "interval CV": 0.8210073848103024,
+  "interval W1 to sim (frames)": 1.0091000000000003,
+  "heat flux mean": 46370.70663938398,
+  "heat flux std": 5535.781811254459,
+  "heat flux histogram W1 to sim": 908.8728061224502,
+  "heat flux ACF RMS diff to sim": 0.06934308721761452,
+  "event response RMS diff to sim": 1336.3251682111868,
+  "vapor fraction": 0.025844412931980747
+ },
+ "simulation Twall 98": {
+  "departures": 191.0,
+  "departures per 100 frames": 10.07915567282322,
+  "mean interval (frames)": 9.863157894736842,
+  "interval CV": 0.8138441449489715,
+  "interval W1 to sim (frames)": 2.1387750000000003,
+  "heat flux mean": 49746.44811803349,
+  "heat flux std": 6208.3179237654085,
+  "heat flux histogram W1 to sim": 2479.172418367347,
+  "heat flux ACF RMS diff to sim": 0.11329957139954469,
+  "event response RMS diff to sim": 2128.715378458809,
+  "vapor fraction": 0.028785566667139058
+ }
+}

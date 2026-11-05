@@ -11,3 +11,4 @@ aiohttp
 einops
 timm
 transformers
+omegaconf

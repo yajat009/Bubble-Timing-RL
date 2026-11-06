@@ -26,16 +26,28 @@ This repository currently holds the **feasibility checks** that come before any 
 
 | Script | Dataset | Purpose |
 |---|---|---|
-| `scripts/download_v2.py` | 2.0 | Reads the 4 Bubbleformer fields of chosen files from Hugging Face. Saves a vapor mask and a 128 x 128 copy of the fields. |
+| `scripts/download_bubbleml_v2.py` | 2.0 | Reads the 4 Bubbleformer fields of chosen files from Hugging Face. Saves a vapor mask and a 128 x 128 copy of the fields. |
 | `scripts/detect_departures.py` | both | Finds the frames where bubbles leave the wall. |
-| `scripts/download_v1.py` | v1 | Downloads the first N files of the BubbleML v1 archive. |
-| `scripts/inspect_v1.py` | v1 | Prints the fields and key parameters of one v1 file. |
-| `scripts/probe_v1.py` | v1 | Tests whether 5 frames predict the time to the next departure. |
-| `scripts/probe_v2.py` | 2.0 | T3 probe: the same test with Bubbleformer's 4 fields and train/test split. |
-| `scripts/median_baseline_v2.py` | 2.0 | Median baseline for the T3 probe. |
+| `scripts/download_bubbleml_v1.py` | v1 | Downloads the first N files of the BubbleML v1 archive. |
+| `scripts/inspect_file_v1.py` | v1 | Prints the fields and key parameters of one v1 file. |
+| `scripts/departure_probe_v1.py` | v1 | Tests whether 5 frames predict the time to the next departure. |
+| `scripts/departure_probe_v2.py` | 2.0 | T3 probe: the same test with Bubbleformer's 4 fields and train/test split. |
+| `scripts/departure_probe_median_baseline_v2.py` | 2.0 | Median baseline for the T3 probe. |
 | `scripts/accuracy_check_v2.py` | 2.0 | Checks Bubbleformer's 1-10 frame accuracy against persistence, to rule out a setup error. |
 | `scripts/bubbleformer_io.py` | 2.0 | Shared helpers: load the Bubbleformer checkpoint, conditioning values, read frames. |
-| `scripts/rollout_timing_v2.py` | 2.0 | Rolls out the published Bubbleformer-S and compares its departure timing and heat flux with the simulation. |
+| `scripts/compare_rollout_timing_v2.py` | 2.0 | Rolls out the published Bubbleformer-S and compares its departure timing and heat flux with the simulation. |
+
+## Result file names
+
+| Pattern | Contents |
+|---|---|
+| `departure_frames_<file>.npy` | Frame numbers where at least one bubble departed. |
+| `departure_events_<file>.npy` | Frame and x pixel of each departure (BubbleML 2.0 only). |
+| `departure_plot_<file>.png` | Plot of the departures in one file. |
+| `departure_probe_v2.*` | Results of the T3 departure probe. |
+| `rollout_timing_<file>.*` | Comparison of a Bubbleformer rollout with the simulation. |
+
+Raw `.log` files keep the labels that were printed when they ran, so they may use older names.
 
 ## Documents
 

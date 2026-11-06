@@ -1,6 +1,6 @@
 # Current results: what the repo shows, checked
 
-> **Paths (repo reorganized after this was written).** `RESULTS.md` is now `results/v1/RESULTS.md`, scripts are in `scripts/` (`probe.py` is `scripts/probe_v1.py`), and BubbleML v1 outputs are in `results/v1/`. Code quotes and line numbers refer to commit `4461f46`.
+> **Paths (repo reorganized after this was written).** `RESULTS.md` is now `results/v1/RESULTS.md`, scripts are in `scripts/` (`probe.py` is `scripts/probe_v1.py`), and BubbleML v1 outputs are in `results/v1/`. Code quotes and line numbers refer to commit `4461f46`. Files, functions, and result labels were renamed later for clarity; see `README.md` for current names.
 
 This document checks the results in this repository against the claims in the project brief.
 It separates three kinds of statement:

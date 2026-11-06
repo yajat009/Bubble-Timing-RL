@@ -1,5 +1,5 @@
-# BubbleML v1 only. Run from the repo root.
-# Feasibility probe: can 5 consecutive frames predict the time to the next bubble departure?
+# BubbleML v1 only. Run from the repo root: python scripts/departure_probe_v1.py [folder with vapor masks]
+# Departure probe: can 5 consecutive frames predict the time to the next bubble departure?
 # Models, tested leave-one-file-out (each test file is a wall temperature the model never saw):
 #   baseline: always predict the mean training target
 #   (a) frames only
@@ -10,34 +10,34 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # Folder with the *_vapor.npy masks that detect_departures.py wrote.
-D = sys.argv[1] if len(sys.argv) > 1 else "/pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D"
+DATA_DIR = sys.argv[1] if len(sys.argv) > 1 else "/pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D"
 FILES = ["Twall-100", "Twall-103", "Twall-106", "Twall-110"]
-W = 5                          # frames per input window
+WINDOW_FRAMES = 5                          # frames per input window
 SEEDS = range(5)
-EPOCHS, LR, BS = 40, 1e-3, 32
-dev = "cuda"
+EPOCHS, LEARNING_RATE, BATCH_SIZE = 40, 1e-3, 32
+device = "cuda"
 
-def load(name):
-    v = np.load(f"{D}/{name}_vapor.npy").astype(np.float32)   # vapor mask, shape (T, 384, 384)
+def load_file(name):
+    v = np.load(f"{DATA_DIR}/{name}_vapor.npy").astype(np.float32)   # vapor mask, shape (T, 384, 384)
     T = len(v)
     v = v.reshape(T, 96, 4, 96, 4).mean(axis=(2, 4))          # shrink each frame 4x
-    deps = np.load(f"results/v1/departures_{name}.npy")
+    departures = np.load(f"results/v1/departure_frames_{name}.npy")
     X, since, until = [], [], []
-    for t in range(W - 1, T):                                 # window = frames t-W+1 ... t
-        past, future = deps[deps <= t], deps[deps > t]
+    for t in range(WINDOW_FRAMES - 1, T):                                 # window = frames t-WINDOW_FRAMES+1 ... t
+        past, future = departures[departures <= t], departures[departures > t]
         # Keep only windows with a previous and a next departure,
         # so every model is scored on the same samples.
         if len(past) == 0 or len(future) == 0:
             continue
-        X.append(v[t - W + 1:t + 1]); since.append(t - past.max()); until.append(future.min() - t)
+        X.append(v[t - WINDOW_FRAMES + 1:t + 1]); since.append(t - past.max()); until.append(future.min() - t)
     return [torch.tensor(np.array(a), dtype=torch.float32) for a in (X, since, until)]
 
-class Net(nn.Module):
+class DeparturePredictor(nn.Module):
     def __init__(self, use_frames, use_since):
         super().__init__()
         self.use_frames, self.use_since = use_frames, use_since
         self.conv = nn.Sequential(
-            nn.Conv2d(W, 16, 5, 2, 2), nn.ReLU(), nn.Conv2d(16, 32, 3, 2, 1), nn.ReLU(),
+            nn.Conv2d(WINDOW_FRAMES, 16, 5, 2, 2), nn.ReLU(), nn.Conv2d(16, 32, 3, 2, 1), nn.ReLU(),
             nn.Conv2d(32, 64, 3, 2, 1), nn.ReLU(), nn.AdaptiveAvgPool2d(1), nn.Flatten())
         self.head = nn.Sequential(nn.Linear(64 * use_frames + use_since, 32), nn.ReLU(), nn.Linear(32, 1))
     def forward(self, x, since):
@@ -46,33 +46,33 @@ class Net(nn.Module):
         if self.use_since: parts.append(since[:, None] / 10)   # scale to a size similar to the CNN features
         return self.head(torch.cat(parts, 1))[:, 0] * 10      # the network predicts in units of 10 frames
 
-def train_eval(tr, te, use_frames, use_since, seed):
+def train_and_test(train_set, test_set, use_frames, use_since, seed):
     torch.manual_seed(seed)
-    m = Net(use_frames, use_since).to(dev)
-    opt = torch.optim.Adam(m.parameters(), LR)
-    X, s, y = [a.to(dev) for a in tr]
+    model = DeparturePredictor(use_frames, use_since).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), LEARNING_RATE)
+    X, s, y = [a.to(device) for a in train_set]
     for _ in range(EPOCHS):
-        for i in torch.randperm(len(X), device=dev).split(BS):
-            loss = (m(X[i], s[i]) - y[i]).abs().mean()
-            opt.zero_grad(); loss.backward(); opt.step()
-    m.eval()
+        for i in torch.randperm(len(X), device=device).split(BATCH_SIZE):
+            loss = (model(X[i], s[i]) - y[i]).abs().mean()
+            optimizer.zero_grad(); loss.backward(); optimizer.step()
+    model.eval()
     with torch.no_grad():
-        Xt, st, yt = [a.to(dev) for a in te]
-        return (m(Xt, st) - yt).abs().mean().item()          # test MAE, no early stopping on test data
+        Xt, st, yt = [a.to(device) for a in test_set]
+        return (model(Xt, st) - yt).abs().mean().item()          # test MAE, no early stopping on test data
 
 MODELS = {"(a) frames": (1, 0), "(b) frames + since": (1, 1), "(c) since only": (0, 1)}
-data = {n: load(n) for n in FILES}
+data = {n: load_file(n) for n in FILES}
 print({n: len(d[0]) for n, d in data.items()}, "samples per file")
 
 # mae[name][fold, seed]
 mae = {k: np.zeros((len(FILES), len(SEEDS))) for k in ["baseline", *MODELS]}
 for f, held in enumerate(FILES):
-    tr = [torch.cat([data[n][i] for n in FILES if n != held]) for i in range(3)]
-    te = data[held]
-    mae["baseline"][f] = (te[2] - tr[2].mean()).abs().mean().item()
+    train_set = [torch.cat([data[n][i] for n in FILES if n != held]) for i in range(3)]
+    test_set = data[held]
+    mae["baseline"][f] = (test_set[2] - train_set[2].mean()).abs().mean().item()
     for k, (uf, us) in MODELS.items():
         for s in SEEDS:
-            mae[k][f, s] = train_eval(tr, te, uf, us, s)
+            mae[k][f, s] = train_and_test(train_set, test_set, uf, us, s)
     print(f"test={held}: " + "  ".join(f"{k}={v[f].mean():.2f}" for k, v in mae.items()), flush=True)
 
 print("\nMean test MAE in frames (mean over folds, then mean +- std over seeds):")
@@ -87,4 +87,4 @@ ax[0].set_xticks(np.arange(4) + 0.3); ax[0].set_xticklabels(FILES)
 ax[0].set(ylabel="test MAE (frames)", title="per test file (error bar = std over seeds)"); ax[0].legend()
 ax[1].bar(list(overall), [v.mean() for v in overall.values()], yerr=[v.std() for v in overall.values()])
 ax[1].set(ylabel="test MAE (frames)", title="mean over test files"); ax[1].tick_params(axis="x", rotation=20)
-plt.tight_layout(); plt.savefig("results/v1/probe.png", dpi=110)
+plt.tight_layout(); plt.savefig("results/v1/departure_probe_v1.png", dpi=110)

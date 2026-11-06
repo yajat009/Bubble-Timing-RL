@@ -36,13 +36,13 @@ One frame is 0.1 time units.
 - The CV is between 0.70 and 0.93 at every Twall. A CV of 1 is what fully random (Poisson) timing gives. The pooled departures are close to random at every wall temperature.
 - The debounce removes more raw events at high Twall: 6% at Twall 86, 38% at Twall 108. The detector has not yet been validated by eye (T1), and it does the most correction where bubbles are densest.
 
-Files: `departures_Twall_<T>.npy` (frames), `departures_Twall_<T>_events.npy` (frame, x pixel), `departures_Twall_<T>.png`.
+Files: `departure_frames_Twall_<T>.npy` (frames), `departure_events_Twall_<T>.npy` (frame, x pixel), `departure_plot_Twall_<T>.png`.
 
 ## 2. T3: do Bubbleformer's 5 input frames predict the time to the next departure?
 
 ### Method
 
-`scripts/probe_v2.py`. All settings were fixed before the run.
+`scripts/departure_probe_v2.py`. All settings were fixed before the run.
 
 - **Input**: 5 frames x 4 fields (`dfun`, `temperature`, `velx`, `vely`), the same fields Bubbleformer uses. Each field is averaged over 4 x 4 cells, from 512 x 512 to 128 x 128.
 - **Target**: frames from the last input frame to the next departure, from any nucleation site.
@@ -50,7 +50,7 @@ Files: `departures_Twall_<T>.npy` (frames), `departures_Twall_<T>_events.npy` (f
 - **Windows**: frames 100-2000. A window is kept only if it has a previous and a next departure. Training uses every 5th window (5,811 windows), because neighbouring windows share 4 of 5 frames. Testing uses every window (1,881).
 - **Training**: 4 convolution layers, absolute-error loss, Adam, 10 epochs, 5 seeds.
 - **Irregular windows**: windows inside an interval more than 1 std from the mean training interval (582 of 1,881 test windows).
-- **Median baseline**: added after the run by `scripts/median_baseline_v2.py`, for the reason given under the results.
+- **Median baseline**: added after the run by `scripts/departure_probe_median_baseline_v2.py`, for the reason given under the results.
 
 ### Results
 
@@ -76,6 +76,20 @@ Pass criteria from `analysis/TEST_PLAN.md`, with sd = 0.47 (seed std of model c)
 | 3. On irregular windows, (c) beats (b) by more than 2 sd | PASS | 12.50 - 9.45 = 3.05, more than 0.95 |
 
 **T3 fails**, because the plan requires all three criteria.
+
+### Effect of the GPU on these numbers
+
+**Measured.** A rerun on an NVIDIA A30 gave different values for the two frame models, with the same verdict:
+
+| Model | First run: all / irregular | A30 rerun: all / irregular |
+|---|---|---|
+| (c) 5 frames | 6.46 ± 0.47 / 9.45 ± 0.96 | 6.46 ± 0.56 / 9.59 ± 1.05 |
+| (d) 5 frames + time | 6.55 ± 0.30 / 9.69 ± 1.74 | 6.38 ± 0.15 / 10.26 ± 1.68 |
+
+- On the A30, repeated runs are identical, and the code before and after the renaming gives identical results. So the code is deterministic on one GPU type, and the renaming changed nothing.
+- The first run was probably on a V100, which was the GPU at the start of this work. The GPU of that run was not recorded. Different GPUs can use different kernels, which changes rounding during training. This is the likely cause, not a proven one.
+- The criteria give the same results on both: 1 fails, 2 and 3 pass. The difference between (c) and (d) changes sign between the two runs, which confirms that it is noise.
+- The tables above report the first run. The A30 output is in `departure_probe_v2_a30_gpu.log`.
 
 ### The median baseline changes the reading
 
@@ -120,17 +134,18 @@ Against the median:
 
 | File | Contents |
 |---|---|
-| `probe_v2.log` | Full printed output of `scripts/probe_v2.py`. |
-| `probe_v2.json` | Per-seed MAE values and criteria results. |
-| `probe_v2.png` | Bar plots of the results (mean baseline only). |
-| `median_baseline_v2.log` | Output of `scripts/median_baseline_v2.py`. |
-| `departures_Twall_<T>*` | Departures per file (section 1). |
+| `departure_probe_v2.log` | Full printed output of `scripts/departure_probe_v2.py`, first run. It uses older labels (`sd`). |
+| `departure_probe_v2_a30_gpu.log` | The same probe, rerun on an NVIDIA A30. |
+| `departure_probe_v2.json` | Per-seed MAE values and criteria results. |
+| `departure_probe_v2.png` | Bar plots of the results (mean baseline only). |
+| `departure_probe_median_baseline_v2.log` | Output of `scripts/departure_probe_median_baseline_v2.py`. |
+| `departure_frames_Twall_<T>.npy`, `departure_events_Twall_<T>.npy`, `departure_plot_Twall_<T>.png` | Departures per file (section 1). |
 
 ## 6. T6: does the published Bubbleformer-S get the timing wrong? (Twall 97)
 
 ### Method
 
-`scripts/rollout_timing_v2.py` (added in commit `0a54581`).
+`scripts/compare_rollout_timing_v2.py` (added in commit `0a54581`).
 
 - Model: the published checkpoint `Bubbleformer-S-PB-Subcooled.ckpt` from Hugging Face (`hpcforge/Bubbleformer`), with model code from `github.com/HPCForge/Bubbleformer` at commit `8d1dade`.
 - Start: simulation frames 100-104 of Twall 97 (Bubbleformer's validation file, not used in its training).
@@ -143,19 +158,19 @@ Against the median:
 
 ### Results
 
-**Measured.** From `rollout_timing_Twall_97.md`. "To sim" columns are distances from the Twall 97 simulation; 0 is a perfect match.
+**Measured.** From `rollout_timing_Twall_97.md`. "Distance" and "difference" rows compare with the Twall 97 simulation; 0 is a perfect match. Interval distance and histogram distance use the Wasserstein-1 distance: the average shift needed to make one distribution match the other. RMS means root mean square.
 
 | Statistic | Rollout | Simulation 97 | Noise floor (sim halves) | Simulation 96 | Simulation 98 |
 |---|---|---|---|---|---|
 | Departures | **28** | 157 | 82 (one half) | 149 | 191 |
 | Departures per 100 frames | **1.48** | 8.28 | 8.65 | 7.86 | 10.1 |
 | Mean interval (frames) | **68.3** | 12.0 | 11.5 | 12.8 | 9.86 |
-| Interval CV | 1.82 | 0.80 | 0.87 | 0.82 | 0.81 |
-| Interval W1 to sim (frames) | **46.3** | 0 | 2.08 | 1.01 | 2.14 |
+| Interval coefficient of variation | 1.82 | 0.80 | 0.87 | 0.82 | 0.81 |
+| Interval distance to simulation (frames) | **46.3** | 0 | 2.08 | 1.01 | 2.14 |
 | Heat-flux mean | 44,200 | 47,300 | 47,200 | 46,400 | 49,700 |
-| Heat-flux histogram W1 to sim | 3,100 | 0 | 409 | 909 | 2,480 |
-| Heat-flux autocorrelation RMS diff | **0.461** | 0 | 0.119 | 0.069 | 0.113 |
-| Event-response RMS diff | 2,340 | 0 | 840 | 1,340 | 2,130 |
+| Heat-flux histogram distance to simulation | 3,100 | 0 | 409 | 909 | 2,480 |
+| Heat-flux autocorrelation RMS difference to simulation | **0.461** | 0 | 0.119 | 0.069 | 0.113 |
+| Heat flux around departures, RMS difference to simulation | 2,340 | 0 | 840 | 1,340 | 2,130 |
 | Vapor fraction | 0.0225 | 0.0263 | 0.0278 | 0.0258 | 0.0288 |
 
 **Measured, extra check** (not in the script; computed from the saved vapor masks, every 10th frame):
@@ -173,12 +188,12 @@ Against the median:
 
 ### What it means
 
-- **The baseline gets the timing wrong, by far more than the noise.** The rollout has 5.6 times fewer departures than the simulation. Its interval distribution is 46 frames (W1) from the simulation's, against a noise floor of 2 frames and a 1-degree Twall change of 1-2 frames. Its heat-flux autocorrelation is about 4 times farther from the simulation than the noise floor.
+- **The baseline gets the timing wrong, by far more than the noise.** The rollout has 5.6 times fewer departures than the simulation. Its interval distribution is 46 frames from the simulation's (Wasserstein-1 distance), against a noise floor of 2 frames and a 1-degree Twall change of 1-2 frames. Its heat-flux autocorrelation is about 4 times farther from the simulation than the noise floor.
 - **This is not a detector artifact.** The bubble counts in the extra check do not use the departure detector. After about frame 400, the rollout has about half as many bubbles on the wall and in the domain.
 - **The model loses boiling activity, not bubble shape.** The rollout's bubbles do not form a vapor layer on the wall: wall coverage is lower than in the simulation. Its heat flux is still lower, so the fluid near the wall must be warmer in the rollout (interpretation; temperature was not checked directly).
 - **The heat-flux mean is close** (44,200 against 47,300; 7% low). A reward on the snapshot mean alone would see a small error. The timing statistics see a large one. This is the motivation the project needs for R3.
 
-**T6 pass criterion 2** (the baseline's R3 error at the held-out Twall is above the noise floor for at least one statistic): **passes**, for the interval W1, the autocorrelation, and the event response.
+**T6 pass criterion 2** (the baseline's R3 error at the held-out Twall is above the noise floor for at least one statistic): **passes**, for the interval distance, the autocorrelation, and the heat flux around departures.
 **T6 pass criterion 1** (reproduce the reported 10-frame accuracy): **not tested**.
 
 ### Limits

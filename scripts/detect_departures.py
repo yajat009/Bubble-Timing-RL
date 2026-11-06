@@ -1,7 +1,8 @@
 # Find the frames where a bubble leaves the heater wall, using the vapor region of one BubbleML file.
 # Usage (from the repo root): python scripts/detect_departures.py <path to .hdf5> [output folder]
 # The .hdf5 file itself is not needed if <name>_vapor.npy exists next to it.
-# Writes departures_<name>.npy (frames), departures_<name>_events.npy (frame, x pixel), and departures_<name>.png
+# Writes departure_frames_<name>.npy (one frame number per departure frame), departure_events_<name>.npy
+# (frame and x pixel of each departure), and departure_plot_<name>.png
 # to results/v2 for BubbleML 2.0 files (they have a .json) or results/v1 otherwise.
 import os, sys, json, h5py, numpy as np
 from scipy import ndimage
@@ -16,10 +17,11 @@ DEBOUNCE_TIME = 1.0  # time units. A new event within this time of an earlier ev
 DEBOUNCE_PX = 10     # pixels. "The same place" means within this x distance.
 
 
-def label(frame):
-    lab, n = ndimage.label(frame)
-    attached = np.unique(lab[:WALL_ROWS][lab[:WALL_ROWS] > 0])
-    return lab, attached
+def label_blobs(frame):
+    """Label each connected vapor region (blob). Return the label image and the labels of blobs on the wall."""
+    labels, _ = ndimage.label(frame)
+    wall_labels = np.unique(labels[:WALL_ROWS][labels[:WALL_ROWS] > 0])
+    return labels, wall_labels
 
 
 def find_departures(vapor, frame_dt):
@@ -36,21 +38,21 @@ def find_departures(vapor, frame_dt):
     # - Small stubs left on the wall after the bubble lifts off do not count against the departure.
     # - If the main body is much smaller than the old bubble, the bubble collapsed or broke up.
     #   We do not count that as a departure.
-    events = []  # (t, x_pixel)
-    prev_lab, prev_att = label(vapor[0])
+    events = []  # (frame, x pixel)
+    prev_labels, prev_wall_labels = label_blobs(vapor[0])
     for t in range(1, len(vapor)):
-        lab, att = label(vapor[t])
-        for a in prev_att:
-            blob = prev_lab == a
+        labels, wall_labels = label_blobs(vapor[t])
+        for blob_label in prev_wall_labels:
+            blob = prev_labels == blob_label
             if blob.sum() < MIN_AREA:
                 continue
-            over = lab[ndimage.binary_dilation(blob, iterations=GROW) & (lab > 0)]
-            if len(over) == 0:
+            overlapping = labels[ndimage.binary_dilation(blob, iterations=GROW) & (labels > 0)]
+            if len(overlapping) == 0:
                 continue
-            main = np.bincount(over).argmax()
-            if main not in att and (lab == main).sum() >= KEEP_FRAC * blob.sum():
+            main_body = np.bincount(overlapping).argmax()
+            if main_body not in wall_labels and (labels == main_body).sum() >= KEEP_FRAC * blob.sum():
                 events.append((t, int(np.nonzero(blob)[1].mean())))
-        prev_lab, prev_att = lab, att
+        prev_labels, prev_wall_labels = labels, wall_labels
 
     # At fine frame spacing (0.1 time units) a bubble can hover at the wall: it touches, lifts by one row,
     # and touches again. Each lift looks like a departure. Keep only the first event of such a sequence.
@@ -58,7 +60,7 @@ def find_departures(vapor, frame_dt):
     # debounce_frames in time, so a bubble that bounces many times still gives one departure.
     kept, seen = [], []
     for t, x in sorted(events):
-        if not any(t - ts <= debounce_frames and abs(x - xs) <= DEBOUNCE_PX for ts, xs in seen):
+        if not any(t - seen_t <= debounce_frames and abs(x - seen_x) <= DEBOUNCE_PX for seen_t, seen_x in seen):
             kept.append((t, x))
         seen.append((t, x))
     return kept, len(events)
@@ -67,13 +69,13 @@ def find_departures(vapor, frame_dt):
 if __name__ == "__main__":
     PATH = sys.argv[1] if len(sys.argv) > 1 else "/pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D/Twall-100.hdf5"
     NAME = os.path.basename(PATH).replace(".hdf5", "")
-    CACHE = PATH.replace(".hdf5", "_vapor.npy")  # vapor mask, bool (T, Y, X). Saved because reading dfun from the HDF5 file is slow.
-    if os.path.exists(CACHE):
-        vapor = np.load(CACHE)
+    VAPOR_CACHE = PATH.replace(".hdf5", "_vapor.npy")  # vapor mask, bool (T, Y, X). Saved because reading dfun from the HDF5 file is slow.
+    if os.path.exists(VAPOR_CACHE):
+        vapor = np.load(VAPOR_CACHE)
     else:
         with h5py.File(PATH) as f:
             vapor = f["dfun"][()] > 0
-        np.save(CACHE, vapor)
+        np.save(VAPOR_CACHE, vapor)
     T = len(vapor)
 
     # Time between saved frames. BubbleML 2.0 files have a .json with the time range; BubbleML v1 files do not (1.0 per frame).
@@ -82,19 +84,19 @@ if __name__ == "__main__":
     if os.path.exists(meta):
         j = json.load(open(meta))
         FRAME_DT = (j["t_final"] - j["t_initial"]) / (T - 1)
-    OUT = sys.argv[2] if len(sys.argv) > 2 else ("results/v2" if os.path.exists(meta) else "results/v1")  # run from the repo root
+    OUT_DIR = sys.argv[2] if len(sys.argv) > 2 else ("results/v2" if os.path.exists(meta) else "results/v1")  # run from the repo root
 
     events, n_raw = find_departures(vapor, FRAME_DT)
     print(f"frame spacing {FRAME_DT} time units; debounce {round(DEBOUNCE_TIME / FRAME_DT)} frames: {n_raw} raw events -> {len(events)} departures")
-    np.save(f"{OUT}/departures_{NAME}_events.npy", np.array(events))  # (frame, x pixel) per departure, for per-site analysis
+    np.save(f"{OUT_DIR}/departure_events_{NAME}.npy", np.array(events))  # (frame, x pixel) per departure, for per-site analysis
     times = np.array(sorted({t for t, _ in events}))  # keep each frame once, even if several bubbles leave in it
     print(NAME)
     print(f"{len(events)} departure events in {len(times)} distinct frames, T={T}")
     print("frames:", times.tolist())
-    gaps = np.diff(times)
-    print("inter-departure intervals:", gaps.tolist())
-    print(f"interval mean={gaps.mean():.2f} median={np.median(gaps):.1f} min={gaps.min()} max={gaps.max()}")
-    np.save(f"{OUT}/departures_{NAME}.npy", times)
+    intervals = np.diff(times)
+    print("inter-departure intervals:", intervals.tolist())
+    print(f"interval mean={intervals.mean():.2f} median={np.median(intervals):.1f} min={intervals.min()} max={intervals.max()}")
+    np.save(f"{OUT_DIR}/departure_frames_{NAME}.npy", times)
 
     fig, ax = plt.subplots(1, 3, figsize=(15, 4))
     ax[0].imshow(vapor[:, 0, :].T, origin="lower", aspect="auto", cmap="gray_r", extent=[0, T, 0, vapor.shape[2]])
@@ -102,5 +104,5 @@ if __name__ == "__main__":
     ax[0].set(title="wall-row vapor (black) + departures (red)", xlabel="frame", ylabel="x pixel")
     ax[1].plot(vapor.mean(axis=(1, 2))); ax[1].vlines(times, 0, vapor.mean(), colors="r", lw=0.6)
     ax[1].set(title="vapor fraction", xlabel="frame")
-    ax[2].hist(gaps, bins=range(1, gaps.max() + 2)); ax[2].set(title="inter-departure interval", xlabel="frames")
-    plt.tight_layout(); plt.savefig(f"{OUT}/departures_{NAME}.png", dpi=110)
+    ax[2].hist(intervals, bins=range(1, intervals.max() + 2)); ax[2].set(title="inter-departure interval", xlabel="frames")
+    plt.tight_layout(); plt.savefig(f"{OUT_DIR}/departure_plot_{NAME}.png", dpi=110)

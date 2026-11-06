@@ -1,0 +1,28 @@
+{86: 847, 88: 1775, 90: 1835, 92: 1889, 94: 1886, 96: 1895, 98: 1894, 100: 1894, 102: 1896, 104: 1893, 106: 1887, 108: 1886, 110: 1889, 112: 1894, 114: 1889, 116: 1878, 97: 1881} windows per file
+train windows 5811, test windows 1881, irregular test windows 582; train interval mean 10.5 std 10.6 frames
+(b) time only seed 0: MAE 6.63, irregular 12.39
+(b) time only seed 1: MAE 6.54, irregular 12.61
+(b) time only seed 2: MAE 6.52, irregular 12.47
+(b) time only seed 3: MAE 6.56, irregular 12.44
+(b) time only seed 4: MAE 6.54, irregular 12.61
+(c) frames seed 0: MAE 6.54, irregular 8.58
+(c) frames seed 1: MAE 6.07, irregular 10.68
+(c) frames seed 2: MAE 6.11, irregular 10.63
+(c) frames seed 3: MAE 7.41, irregular 8.55
+(c) frames seed 4: MAE 6.19, irregular 9.52
+(d) frames + time seed 0: MAE 6.44, irregular 10.40
+(d) frames + time seed 1: MAE 6.26, irregular 12.06
+(d) frames + time seed 2: MAE 6.20, irregular 11.73
+(d) frames + time seed 3: MAE 6.49, irregular 8.30
+(d) frames + time seed 4: MAE 6.53, irregular 8.81
+
+Test MAE in frames on Twall 97 (mean +- sample std over 5 seeds):
+  (a) mean only        all 7.04 +- 0.00   irregular 10.32 +- 0.00
+  (b) time only        all 6.56 +- 0.04   irregular 12.50 +- 0.10
+  (c) frames           all 6.46 +- 0.56   irregular 9.59 +- 1.05
+  (d) frames + time    all 6.38 +- 0.15   irregular 10.26 +- 1.68
+
+seed std of (c) = 0.559
+  criterion 1: (c) beats (a) by more than 2 seed std: FAIL
+  criterion 2: |(d) - (c)| within 1 seed std: PASS
+  criterion 3: on irregular intervals, (c) beats (b) by more than 2 seed std: PASS

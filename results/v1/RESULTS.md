@@ -43,9 +43,9 @@ Departure counts and intervals (in frames):
 
 Each file has fewer than the 20-50 departures we aimed for.
 The four files together have 63.
-Plots: `departures_Twall-100.png`, `departures_Twall-103.png`, `departures_Twall-106.png`, `departures_Twall-110.png`.
+Plots: `departure_plot_Twall-100.png`, `departure_plot_Twall-103.png`, `departure_plot_Twall-106.png`, `departure_plot_Twall-110.png`.
 
-### 2. Train the probe (`scripts/probe_v1.py`)
+### 2. Train the probe (`scripts/departure_probe_v1.py`)
 
 - Input: 5 consecutive vapor-mask frames, each shrunk to 96 x 96 pixels and stacked as channels.
 - Target: the number of frames from the last input frame until the next departure.
@@ -78,7 +78,7 @@ Test MAE in frames. Lower is better. Each cell is the mean over 5 seeds.
 The "+-" value is the standard deviation across the 5 seeds.
 For scale, the mean interval between departures is about 12 frames.
 
-![Probe results](probe.png)
+![Probe results](departure_probe_v1.png)
 
 ## Verdict
 
@@ -111,12 +111,12 @@ Second, the data is small (about 180 samples per file, 4 files, 5 seeds), and th
 | File | Purpose |
 |---|---|
 | `requirements.txt` | Python packages. The comment inside explains the CUDA 12.6 build that the V100 GPU needs. |
-| `scripts/download_v1.py` | Downloads the first N HDF5 files from the BubbleML archive. |
-| `scripts/inspect_v1.py` | Prints the fields, shapes, and key parameters of one file. |
+| `scripts/download_bubbleml_v1.py` | Downloads the first N HDF5 files from the BubbleML archive. |
+| `scripts/inspect_file_v1.py` | Prints the fields, shapes, and key parameters of one file. |
 | `scripts/detect_departures.py` | Finds departure frames. The v1 departure files were made with the version at commit `4461f46`, before the debounce was added. |
-| `scripts/probe_v1.py` | Trains and tests the probe models and writes `probe.png`. |
-| `departures_*.npy`, `departures_*.png` | Departure frames and plots for each file. |
-| `probe.png` | Probe results plot. |
+| `scripts/departure_probe_v1.py` | Trains and tests the probe models and writes `departure_probe_v1.png`. |
+| `departure_frames_*.npy`, `departure_plot_*.png` | Departure frames and plots for each file. |
+| `departure_probe_v1.png` | Probe results plot. |
 
 Data files are in `/pub/ynagaraj/bubbleml` and are not in this repository.
 
@@ -124,8 +124,8 @@ Data files are in `/pub/ynagaraj/bubbleml` and are not in this repository.
 
 ```
 pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu126 --extra-index-url https://pypi.org/simple
-python scripts/download_v1.py 4
+python scripts/download_bubbleml_v1.py 4
 git checkout 4461f46 -- detect_departures.py   # the detector version used here
-for t in 100 103 106 110; do python detect_departures.py /pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D/Twall-$t.hdf5; done   # then move the outputs to results/v1/
-python scripts/probe_v1.py
+for t in 100 103 106 110; do python detect_departures.py /pub/ynagaraj/bubbleml/PoolBoiling-SubCooled-FC72-2D/Twall-$t.hdf5; done   # then move the outputs to results/v1/ and rename them departure_frames_<name>.npy and departure_plot_<name>.png
+python scripts/departure_probe_v1.py
 ```

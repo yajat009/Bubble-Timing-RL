@@ -59,11 +59,11 @@
    9.788698196411133
   ]
  },
- "sd_c": 0.4742972629211902,
+ "seed_std_of_model_c": 0.4742972629211902,
  "criteria": {
-  "1: (c) beats (a) by more than 2 sd": false,
-  "2: |(d) - (c)| within 1 sd": true,
-  "3: on irregular intervals, (c) beats (b) by more than 2 sd": true
+  "1: (c) beats (a) by more than 2 seed std": false,
+  "2: |(d) - (c)| within 1 seed std": true,
+  "3: on irregular intervals, (c) beats (b) by more than 2 seed std": true
  },
  "test_windows": 1881,
  "irregular_windows": 582

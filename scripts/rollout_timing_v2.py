@@ -21,10 +21,11 @@
 # Needs in DATA: Twall_<T>.json, Twall_<T>_vapor.npy, Twall_<T>_fields128.npy (from download_v2.py),
 # for the test file and each neighbour. The initial 5 frames are read from Hugging Face if Twall_<T>.hdf5 is not in DATA.
 import argparse, json, os, time
-import numpy as np, torch, h5py, fsspec
+import numpy as np, torch
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from detect_departures import find_departures
+from bubbleformer_io import FIELDS, load_model, fluid_params, read_frames
 
 p = argparse.ArgumentParser()
 p.add_argument("--ckpt", required=True)
@@ -36,8 +37,6 @@ p.add_argument("--out", default="results/v2")
 p.add_argument("--force", action="store_true", help="run the rollout again even if its files exist")
 args = p.parse_args()
 
-HF = "https://huggingface.co/datasets/hpcforge/BubbleML_2/resolve/main/PoolBoiling-Subcooled-FC72-2D"
-FIELDS = ["dfun", "temperature", "velx", "vely"]   # Bubbleformer's fields, in its order
 W, START = 5, 100                                  # Bubbleformer's time window and start frame
 POOL = 4                                           # 512 -> 128, as in download_v2.py
 MAX_LAG = 100                                      # frames (10 time units) for the autocorrelation
@@ -50,68 +49,6 @@ frames = range(first, first + args.frames)
 
 # ---------- 1-2. Rollout ----------
 
-def load_model(path, dev):
-    """Build the model from a Bubbleformer checkpoint, as in Bubbleformer's scripts/inference.py."""
-    from bubbleformer.models import get_model
-    import importlib, pickle, types, torch._weights_only_unpickler as wu
-    # Load safely: the file may create only allow-listed classes, so it cannot run other code while it is read.
-    # torch's weights_only=True loader cannot be used, because it cannot fill the defaultdict in this checkpoint.
-    # The allow list is torch's own safe list plus the classes this checkpoint needs for its omegaconf settings
-    # (listed by torch.serialization.get_unsafe_globals_in_checkpoint).
-    extra = ["omegaconf.listconfig.ListConfig", "omegaconf.dictconfig.DictConfig", "omegaconf.base.ContainerMetadata",
-             "omegaconf.base.Metadata", "omegaconf.nodes.AnyNode", "collections.defaultdict", "typing.Any",
-             "builtins.list", "builtins.dict", "builtins.int"]
-    allowed = dict(wu._get_allowed_globals())
-    for key in extra:
-        mod, attr = key.rsplit(".", 1)
-        allowed[key] = getattr(importlib.import_module(mod), attr)
-
-    import _compat_pickle
-
-    class Restricted(pickle.Unpickler):
-        def find_class(self, module, name):
-            # Old pickle protocols use Python 2 names (for example __builtin__.dict). Translate them first,
-            # as the standard unpickler does.
-            if (module, name) in _compat_pickle.NAME_MAPPING:
-                module, name = _compat_pickle.NAME_MAPPING[(module, name)]
-            elif module in _compat_pickle.IMPORT_MAPPING:
-                module = _compat_pickle.IMPORT_MAPPING[module]
-            key = f"{module}.{name}"
-            if key not in allowed:
-                raise pickle.UnpicklingError(f"checkpoint uses a class that is not allowed: {key}")
-            return allowed[key]
-
-    restricted = types.SimpleNamespace(Unpickler=Restricted, load=pickle.load, __name__="restricted_pickle")
-    ck = torch.load(path, map_location="cpu", weights_only=False, pickle_module=restricted)
-    hp = ck["hyper_parameters"]
-    params = dict(hp["model_cfg"]["params"])
-    params["input_fields"] = len(hp["data_cfg"]["input_fields"])
-    params["output_fields"] = len(hp["data_cfg"]["output_fields"])
-    params["time_window"] = hp["data_cfg"]["time_window"]
-    model = get_model(hp["model_cfg"]["name"], **params)
-    model.load_state_dict({k[len("model."):]: v for k, v in ck["state_dict"].items()})  # drop the Lightning prefix
-    diff, div = hp["normalization_constants"]
-    return model.to(dev).eval(), diff, div
-
-
-def fluid_params(j):
-    """The 9 conditioning values, in the order of Bubbleformer's BubbleForecast dataset."""
-    h = j["heater"]
-    return torch.tensor([[j["inv_reynolds"], j["cpgas"], j["mugas"], j["rhogas"], j["thcogas"],
-                          j["stefan"], j["prandtl"], h["nucWaitTime"], h["wallTemp"]]], dtype=torch.float32)
-
-
-def initial_frames():
-    """Frames START ... START+W-1 of the 4 fields at 512 x 512, shape (W, 4, 512, 512)."""
-    local = f"{args.data}/{name}.hdf5"
-    fo = None if os.path.exists(local) else fsspec.open(f"{HF}/{name}.hdf5", "rb", block_size=2**24).open()
-    with h5py.File(local if fo is None else fo) as f:
-        x = np.stack([f[k][START:START + W] for k in FIELDS], axis=1)
-    if fo is not None:
-        fo.close()
-    return torch.from_numpy(x.astype(np.float32))
-
-
 def shrink(a):
     """Average each 4 x 4 block of cells: (..., 512, 512) -> (..., 128, 128)."""
     *lead, h, w = a.shape
@@ -123,7 +60,7 @@ def rollout(vap_path, fld_path):
     model, diff, div = load_model(args.ckpt, dev)
     shift = torch.tensor([diff[k] for k in FIELDS]).view(1, 4, 1, 1)
     scale = torch.tensor([div[k] for k in FIELDS]).view(1, 4, 1, 1)
-    x = ((initial_frames() - shift) / scale)[None].to(dev)          # (1, W, 4, H, W), normalized
+    x = ((read_frames(args.data, name, START, START + W) - shift) / scale)[None].to(dev)          # (1, W, 4, H, W), normalized
     cond = fluid_params(meta).to(dev)
     n_bundles = -(-args.frames // W)                                 # round up
     vapor = np.zeros((n_bundles * W, 512, 512), dtype=bool)

@@ -202,3 +202,39 @@ Against the median:
 - The detector is not validated (T1), and predicted bubbles may have softer edges than simulated ones. The detector-free bubble counts support the result.
 - The heat flux is a proxy on 128 x 128 fields.
 - Bubbleformer's reported accuracy was not reproduced, so a setup error (for example in the input normalization or the conditioning values) cannot be ruled out. Already in frames 105-404 the rollout differs from the simulation: more bubbles in the domain (28.9 against 19.9) and less wall coverage (0.34 against 0.42). Checking the one-step and 10-frame accuracy against the paper's values is the next step before trusting this result.
+
+## 7. GPU tests A-D and a check against the Bubbleformer paper (job 59689741)
+
+`scripts/run_gpu_tests_v2.sbatch` ran tests A-D on one V100 in 64 minutes. All four tests finished. Tables: `accuracy_Twall_97.md`, `rollout_starts_Twall_97.md`, `dwell_times_Twall_97.md`, `window_sweep_Twall_97.md`. Logs: `logs/`.
+
+### Results
+
+**Measured.**
+
+- **A. Short-term accuracy (20 start frames).** Bubbleformer-S is about 3 times better than persistence (repeat the last input frame). Frame 1, relative L2: velx 0.121 against 0.332, vely 0.097 against 0.263. Vapor IoU: 0.875 against 0.756. Frames 6-10: vapor IoU 0.761 against 0.291.
+- **D. Rollouts from 4 more start frames (250, 500, 750, 995; 1,000 frames each).** Every rollout loses activity: 1.4-2.8 departures per 100 frames, against 7.0-8.5 in the simulation over the same frames. Interval W1: 23-49 frames. The mean heat flux is similar or higher (54,000 against 47,100 from start 995).
+- **B. Quiet and active dwell times** (heat flux smoothed over 10 frames, threshold = simulation median). Simulation: mean quiet dwell 17.7 frames, longest 107. Rollouts: mean 28-70, longest up to 621. Quiet-dwell W1 to the simulation: 9-39 frames, against a noise floor of 3.2. The Markov gap (max |P(2L) - P(L)^2|) is small and noisy for both the simulation and the rollouts.
+- **C. Window sweep** (frames until the next departure, 3 seeds). Median baseline 6.55. Window 1: 5.98; 2: 6.36; 5: 6.38; 10: 6.26; 20: 6.45 frames. A longer window does not help.
+
+### Check against the paper
+
+**Source:** the checkpoint's saved settings, and Bubbleformer (arXiv 2507.21244), Table 8 and Section 4.2.
+
+- **Settings match.** The checkpoint uses the same 4 fields in the same order, a 5-frame window, start frame 100, no normalization, full 512 x 512 resolution, and the same 9 conditioning values in the same order. Twall 97 is its validation file. It trained for 250 epochs. It has 28.9M parameters (the paper reports 29.5M).
+- **Short-term error.** The paper reports no 1-10 frame forecast error for subcooled pool boiling, so test A cannot be compared with it directly.
+- **Long rollout, Table 8 (Bubbleformer-S, FC-72, 97 C).** Heat-flux KL divergence: paper 1.06; ours 0.19 over 200 frames and 0.85 over the full rollout, which is consistent. Relative vapor-volume error: paper 2.66; ours 0.15-0.25, about 10 times lower. This difference is not explained: the paper gives no horizon or start frame for Table 8, and the Bubbleformer repository has no evaluation script. Our KL uses the 128 x 128 heat-flux proxy, not the paper's full-resolution heat flux.
+- **Bubbleformer-L.** The paper reports that Bubbleformer-L is much better than S on subcooled boiling (vapor-volume error 0.38 against 2.66 at 97 C).
+
+### What it means
+
+**Interpretation.**
+
+- The setup is correct, so the T6 stall comes from the model, not from a setup error. The stall happens from every start frame.
+- The failure is a rate problem: the rollout is too quiet and stays quiet too long. Longer windows do not help, and the quiet/active switching shows no clear memory. A timing reward on the departure rate, waiting times and dwell times targets this failure directly. A memory head is an ablation, not the main fix.
+- The paper's vapor-volume error for S is much worse than ours, and the paper reports that L is much better. Before RL, check whether Bubbleformer-L also stalls, at Twall 97 and at Twall 107 (also not used in training).
+
+### Limits
+
+- The departure detector is still not checked by hand (T1).
+- The heat flux is a proxy on 128 x 128 fields.
+- One fluid, one held-out wall temperature.

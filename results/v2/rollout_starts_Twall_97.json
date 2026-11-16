@@ -1,0 +1,70 @@
+{
+ "start 250: sim": {
+  "departures": 77.0,
+  "departures per 100 frames": 7.7,
+  "mean interval (frames)": 12.986842105263158,
+  "interval CV": 0.6939646031683531,
+  "heat flux mean": 46086.099795918366,
+  "vapor fraction": 0.025808448791503905
+ },
+ "start 250: rollout": {
+  "departures": 26.0,
+  "departures per 100 frames": 2.6,
+  "mean interval (frames)": 39.48,
+  "interval CV": 1.0730081218814738,
+  "heat flux mean": 47793.760714285716,
+  "vapor fraction": 0.021371536254882813,
+  "interval W1 to sim (frames)": 24.1820125
+ },
+ "start 500: sim": {
+  "departures": 70.0,
+  "departures per 100 frames": 7.0,
+  "mean interval (frames)": 13.72463768115942,
+  "interval CV": 0.7228796372141286,
+  "heat flux mean": 45832.65612244898,
+  "vapor fraction": 0.026757221221923828
+ },
+ "start 500: rollout": {
+  "departures": 16.0,
+  "departures per 100 frames": 1.6,
+  "mean interval (frames)": 58.666666666666664,
+  "interval CV": 1.0947317022905658,
+  "heat flux mean": 47502.78979591837,
+  "vapor fraction": 0.01674966812133789,
+  "interval W1 to sim (frames)": 40.561875
+ },
+ "start 750: sim": {
+  "departures": 75.0,
+  "departures per 100 frames": 7.5,
+  "mean interval (frames)": 13.445945945945946,
+  "interval CV": 0.8142570664962834,
+  "heat flux mean": 46271.38591836734,
+  "vapor fraction": 0.027460041046142577
+ },
+ "start 750: rollout": {
+  "departures": 28.0,
+  "departures per 100 frames": 2.8,
+  "mean interval (frames)": 36.888888888888886,
+  "interval CV": 0.7712490411445552,
+  "heat flux mean": 45744.04285714285,
+  "vapor fraction": 0.02675194549560547,
+  "interval W1 to sim (frames)": 23.05085
+ },
+ "start 995: sim": {
+  "departures": 85.0,
+  "departures per 100 frames": 8.5,
+  "mean interval (frames)": 11.702380952380953,
+  "interval CV": 0.8790756416638795,
+  "heat flux mean": 47141.66112244898,
+  "vapor fraction": 0.02771753692626953
+ },
+ "start 995: rollout": {
+  "departures": 14.0,
+  "departures per 100 frames": 1.4,
+  "mean interval (frames)": 67.15384615384616,
+  "interval CV": 1.1757410544436793,
+  "heat flux mean": 54006.46622448979,
+  "vapor fraction": 0.021881458282470703,
+  "interval W1 to sim (frames)": 48.849675
+ }
+}

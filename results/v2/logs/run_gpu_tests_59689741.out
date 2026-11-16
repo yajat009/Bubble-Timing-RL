@@ -1,0 +1,9 @@
+Tesla V100-FHHL-16GB, 16384 MiB
+=== A_accuracy_check: start 18:02:50
+=== A_accuracy_check: exit code 0, end 18:54:04
+=== D_rollout_starts: start 18:54:04
+=== D_rollout_starts: exit code 0, end 19:01:54
+=== B_dwell_times: start 19:01:54
+=== B_dwell_times: exit code 0, end 19:02:00
+=== C_window_sweep: start 19:02:00
+=== C_window_sweep: exit code 0, end 19:06:48

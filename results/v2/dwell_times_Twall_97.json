@@ -1,0 +1,93 @@
+{
+ "simulation": {
+  "frames": 1887.0,
+  "active share": 0.49973502914679385,
+  "quiet runs": 53.0,
+  "mean quiet dwell (frames)": 17.71698113207547,
+  "longest quiet dwell (frames)": 107.0,
+  "mean active dwell (frames)": 17.462962962962962,
+  "quiet dwell W1 to sim": 0.0,
+  "active dwell W1 to sim": 0.0,
+  "Markov gap, lag 5": 0.023917427364628208,
+  "Markov gap, lag 10": 0.05051835420882822,
+  "Markov gap, lag 20": 0.0486858733395642
+ },
+ "sim 2nd half vs 1st half": {
+  "frames": 944.0,
+  "active share": 0.5,
+  "quiet runs": 26.0,
+  "mean quiet dwell (frames)": 17.653846153846153,
+  "longest quiet dwell (frames)": 107.0,
+  "mean active dwell (frames)": 17.48148148148148,
+  "quiet dwell W1 to sim": 3.153125,
+  "active dwell W1 to sim": 3.940200000000001,
+  "Markov gap, lag 5": 0.003259066663426957,
+  "Markov gap, lag 10": 0.050498140482458764,
+  "Markov gap, lag 20": 0.1208503219827145
+ },
+ "Twall_97_rollout": {
+  "frames": 1886.0,
+  "active share": 0.37168610816542946,
+  "quiet runs": 17.0,
+  "mean quiet dwell (frames)": 69.70588235294117,
+  "longest quiet dwell (frames)": 621.0,
+  "mean active dwell (frames)": 39.5625,
+  "quiet dwell W1 to sim": 39.108700000000006,
+  "active dwell W1 to sim": 21.462024999999997,
+  "Markov gap, lag 5": 0.02455475944198937,
+  "Markov gap, lag 10": 0.045212828160117874,
+  "Markov gap, lag 20": 0.06100120868964076
+ },
+ "Twall_97_rollout_start250": {
+  "frames": 991.0,
+  "active share": 0.467204843592331,
+  "quiet runs": 19.0,
+  "mean quiet dwell (frames)": 27.789473684210527,
+  "longest quiet dwell (frames)": 132.0,
+  "mean active dwell (frames)": 22.77777777777778,
+  "quiet dwell W1 to sim": 8.936875,
+  "active dwell W1 to sim": 4.407025000000002,
+  "Markov gap, lag 5": 0.012637227274732266,
+  "Markov gap, lag 10": 0.06309243613419124,
+  "Markov gap, lag 20": 0.05391600806615626
+ },
+ "Twall_97_rollout_start500": {
+  "frames": 991.0,
+  "active share": 0.5307769929364279,
+  "quiet runs": 11.0,
+  "mean quiet dwell (frames)": 42.27272727272727,
+  "longest quiet dwell (frames)": 169.0,
+  "mean active dwell (frames)": 48.1,
+  "quiet dwell W1 to sim": 20.7826,
+  "active dwell W1 to sim": 30.277912500000003,
+  "Markov gap, lag 5": 0.007326673257878835,
+  "Markov gap, lag 10": 0.034310399479345055,
+  "Markov gap, lag 20": 0.03890414022833799
+ },
+ "Twall_97_rollout_start750": {
+  "frames": 991.0,
+  "active share": 0.3955600403632694,
+  "quiet runs": 15.0,
+  "mean quiet dwell (frames)": 39.93333333333333,
+  "longest quiet dwell (frames)": 138.0,
+  "mean active dwell (frames)": 25.142857142857142,
+  "quiet dwell W1 to sim": 20.899375,
+  "active dwell W1 to sim": 6.537149999999998,
+  "Markov gap, lag 5": 0.014144871192176556,
+  "Markov gap, lag 10": 0.07016262914284355,
+  "Markov gap, lag 20": 0.05444983770631451
+ },
+ "Twall_97_rollout_start995": {
+  "frames": 991.0,
+  "active share": 0.8839556004036327,
+  "quiet runs": 4.0,
+  "mean quiet dwell (frames)": 28.75,
+  "longest quiet dwell (frames)": 66.0,
+  "mean active dwell (frames)": 54.333333333333336,
+  "quiet dwell W1 to sim": 9.7045125,
+  "active dwell W1 to sim": 27.194262499999994,
+  "Markov gap, lag 5": 0.0038817689942031164,
+  "Markov gap, lag 10": 0.10098220093688476,
+  "Markov gap, lag 20": 0.11326652297581397
+ }
+}

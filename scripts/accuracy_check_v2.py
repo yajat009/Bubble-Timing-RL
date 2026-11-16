@@ -29,6 +29,7 @@ p.add_argument("--twall", type=int, default=97)
 p.add_argument("--starts", type=int, default=20, help="number of start frames")
 p.add_argument("--data", default="/pub/ynagaraj/bubbleml2/PoolBoiling-Subcooled-FC72-2D")
 p.add_argument("--out", default="results/v2")
+p.add_argument("--tag", default="", help="suffix for output and rollout file names, for example _L for Bubbleformer-L")
 args = p.parse_args()
 
 W, START, LAST = 5, 100, 2000          # Bubbleformer's window and start frame; last frame in a file
@@ -90,7 +91,7 @@ for span, sl in spans.items():
 table = "\n".join(lines)
 print(table)
 os.makedirs(args.out, exist_ok=True)
-out = f"{args.out}/accuracy_{name}"
+out = f"{args.out}/accuracy_{name}{args.tag}"
 open(f"{out}.md", "w").write(table + "\n")
 json.dump({"starts": starts.tolist(), "fields": FIELDS,
            "rel_l2_model": err_model.tolist(), "rel_l2_persistence": err_persist.tolist(),

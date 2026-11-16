@@ -33,6 +33,7 @@ p.add_argument("--frames", type=int, default=1895, help="frames to predict; 1895
 p.add_argument("--neighbors", type=int, nargs="*", default=[], help="wall temperatures to compare with, for scale")
 p.add_argument("--data", default="/pub/ynagaraj/bubbleml2/PoolBoiling-Subcooled-FC72-2D")
 p.add_argument("--out", default="results/v2")
+p.add_argument("--tag", default="", help="suffix for output and rollout file names, for example _L for Bubbleformer-L")
 p.add_argument("--force", action="store_true", help="run the rollout again even if its files exist")
 args = p.parse_args()
 
@@ -219,7 +220,7 @@ def simulation_statistics(twall, frame_slice):
 
 T_total = np.load(f"{args.data}/{name}_vapor.npy", mmap_mode="r").shape[0]
 frame_dt = (meta["t_final"] - meta["t_initial"]) / (T_total - 1)
-vapor_path, fields_path = f"{args.data}/{name}_rollout_vapor.npy", f"{args.data}/{name}_rollout_fields128.npy"
+vapor_path, fields_path = f"{args.data}/{name}_rollout{args.tag}_vapor.npy", f"{args.data}/{name}_rollout{args.tag}_fields128.npy"
 if args.force or not os.path.exists(vapor_path):
     rollout(vapor_path, fields_path)
 roll_vapor, roll_fields = np.load(vapor_path), np.load(fields_path)
@@ -247,7 +248,7 @@ for k in keys:
 table = "\n".join(lines)
 print(table)
 os.makedirs(args.out, exist_ok=True)
-out = f"{args.out}/rollout_timing_{name}"
+out = f"{args.out}/rollout_timing_{name}{args.tag}"
 open(f"{out}.md", "w").write(table + "\n")
 json.dump({c: {k: float(v) for k, v in vals.items()} for c, vals in columns.items()}, open(f"{out}.json", "w"), indent=1)
 

@@ -238,3 +238,44 @@ Against the median:
 - The departure detector is still not checked by hand (T1).
 - The heat flux is a proxy on 128 x 128 fields.
 - One fluid, one held-out wall temperature.
+
+## 8. Bubbleformer-L, and a second held-out wall temperature (Twall 107)
+
+Jobs 59694715 and 59694717, one V100 each, 24 minutes in total. Script: `scripts/run_bubbleformer_l_v2.sbatch`. Tables: `accuracy_Twall_97_L.md`, `rollout_timing_Twall_97_L.md`, `rollout_timing_Twall_107_L.md`, `rollout_timing_Twall_107_S.md`. Twall 107 is not in Bubbleformer's training or validation lists.
+
+**Settings check.** The L checkpoint uses the same data settings as S: the same 4 fields, a 5-frame window, start frame 100, no normalization, the same 9 conditioning values, and 32 training files. It has embedding size 768, 12 heads, 115.3M parameters (the paper reports 115.8M), and 250 epochs of training.
+
+### Results
+
+**Measured.** Departures per 100 frames, frames 105-1999:
+
+| Model | Twall 97 (simulation 8.28) | Twall 107 (simulation 11.7) |
+|---|---|---|
+| Bubbleformer-S | 1.48 | 7.18 |
+| Bubbleformer-L | 2.22 | 1.42 |
+
+Distance from the simulation, with the noise floor (simulation second half against first half) in brackets:
+
+| Statistic | S, Twall 97 | L, Twall 97 | S, Twall 107 | L, Twall 107 |
+|---|---|---|---|---|
+| Interval W1 (frames) | 46.3 (2.08) | 29.9 (2.08) | **5.41 (1.73)** | 58.1 (1.73) |
+| Heat-flux histogram W1 | 3,100 (409) | 8,790 (409) | **590 (1,590)** | 17,700 (1,590) |
+| Heat-flux autocorrelation, RMS | 0.461 (0.119) | 0.577 (0.119) | **0.057 (0.066)** | 0.779 (0.066) |
+| Heat flux around departures, RMS | 2,340 (840) | 7,990 (840) | **1,220 (1,560)** | 15,500 (1,560) |
+| Vapor fraction (simulation) | 0.0225 (0.0263) | 0.0137 (0.0263) | 0.0366 (0.035) | 0.0138 (0.035) |
+
+**L short-term accuracy at Twall 97** (5 start frames) is the same as S: frame-1 relative L2 for velx is 0.120 against 0.332 for persistence, and the vapor IoU is 0.883 against 0.787.
+
+### What it means
+
+**Interpretation.**
+
+- **L also loses bubble activity, by more than S.** At both wall temperatures, L makes 3.7-8 times too few departures, and its vapor fraction is about half of the simulation's. This disagrees with the paper, which reports that L keeps vapor volume much better than S (error 0.38 against 2.66). We have not found the cause. The settings of both checkpoints match the paper's configuration.
+- **S at Twall 107 is the clearest case for a timing reward.** Its heat-flux histogram, autocorrelation and event response are all within the noise floor of the simulation, but it makes 39% too few departures (7.18 against 11.7 per 100 frames). Its interval W1 is 3 times the noise floor. A snapshot reward would pass this rollout. A departure-rate reward would not.
+- **Recommendation:** keep Bubbleformer-S as the backbone. It is better than L in these rollouts, and it is 4 times cheaper to run. Use Twall 107 as a second held-out test, because it isolates the timing error from the snapshot errors.
+
+### Limits
+
+- One rollout per model and wall temperature, from start frame 100.
+- The departure detector is still not checked by hand (T1).
+- The heat flux is a proxy on 128 x 128 fields.

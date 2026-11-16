@@ -1,0 +1,67 @@
+{
+ "Bubbleformer rollout": {
+  "departures": 27.0,
+  "departures per 100 frames": 1.424802110817942,
+  "mean interval (frames)": 69.84615384615384,
+  "interval coefficient of variation": 0.9916586016368307,
+  "interval distance to simulation (frames)": 58.06575,
+  "heat-flux mean": 78291.95326045986,
+  "heat-flux std": 14515.974168135952,
+  "heat-flux histogram distance to simulation": 17722.581864795917,
+  "heat-flux autocorrelation RMS difference to simulation": 0.7785150988407337,
+  "heat flux around departures, RMS difference to simulation": 15525.786596830165,
+  "vapor fraction": 0.013787417046941993
+ },
+ "simulation Twall 107": {
+  "departures": 222.0,
+  "departures per 100 frames": 11.715039577836412,
+  "mean interval (frames)": 8.434389140271493,
+  "interval coefficient of variation": 0.7896933750223452,
+  "interval distance to simulation (frames)": 0.0,
+  "heat-flux mean": 60578.42668676969,
+  "heat-flux std": 7635.58102546168,
+  "heat-flux histogram distance to simulation": 0.0,
+  "heat-flux autocorrelation RMS difference to simulation": 0.0,
+  "heat flux around departures, RMS difference to simulation": 0.0,
+  "vapor fraction": 0.034980560544298316
+ },
+ "simulation, second half vs first half": {
+  "departures": 121.0,
+  "departures per 100 frames": 12.763713080168776,
+  "mean interval (frames)": 7.591666666666667,
+  "interval coefficient of variation": 0.7771485668634767,
+  "interval distance to simulation (frames)": 1.729712500000001,
+  "heat-flux mean": 61374.10229914751,
+  "heat-flux std": 7584.447119808758,
+  "heat-flux histogram distance to simulation": 1592.4470625,
+  "heat-flux autocorrelation RMS difference to simulation": 0.06591448999803923,
+  "heat flux around departures, RMS difference to simulation": 1560.8654786280433,
+  "vapor fraction": 0.03687262233299545
+ },
+ "simulation Twall 106": {
+  "departures": 208.0,
+  "departures per 100 frames": 10.976253298153035,
+  "mean interval (frames)": 9.082125603864734,
+  "interval coefficient of variation": 0.6975337301254638,
+  "interval distance to simulation (frames)": 0.8406750000000006,
+  "heat-flux mean": 59909.43896397609,
+  "heat-flux std": 6842.081146826595,
+  "heat-flux histogram distance to simulation": 1008.5051938775508,
+  "heat-flux autocorrelation RMS difference to simulation": 0.04155694736521209,
+  "heat flux around departures, RMS difference to simulation": 1355.744694487004,
+  "vapor fraction": 0.03435575137981324
+ },
+ "simulation Twall 108": {
+  "departures": 232.0,
+  "departures per 100 frames": 12.242744063324539,
+  "mean interval (frames)": 8.151515151515152,
+  "interval coefficient of variation": 0.8000872561377391,
+  "interval distance to simulation (frames)": 0.33950000000000075,
+  "heat-flux mean": 62885.59614452641,
+  "heat-flux std": 7331.662794264867,
+  "heat-flux histogram distance to simulation": 2310.0559209183666,
+  "heat-flux autocorrelation RMS difference to simulation": 0.04636388983530886,
+  "heat flux around departures, RMS difference to simulation": 1876.8480552565686,
+  "vapor fraction": 0.041078459807624916
+ }
+}

@@ -35,6 +35,10 @@ This repository currently holds the **feasibility checks** that come before any 
 | `scripts/departure_probe_median_baseline_v2.py` | 2.0 | Median baseline for the T3 probe. |
 | `scripts/accuracy_check_v2.py` | 2.0 | Checks Bubbleformer's 1-10 frame accuracy against persistence, to rule out a setup error. |
 | `scripts/bubbleformer_io.py` | 2.0 | Shared helpers: load the Bubbleformer checkpoint, conditioning values, read frames. |
+| `scripts/run_gpu_tests_v2.sbatch` | 2.0 | One Slurm job that runs tests A-D below in order. |
+| `scripts/rollout_starts_v2.py` | 2.0 | Test D: Bubbleformer rollouts from 4 more start frames, departures against the simulation. |
+| `scripts/dwell_times_v2.py` | 2.0 | Test B: how long the simulation and the rollouts stay quiet or active, and a Markov check. |
+| `scripts/window_sweep_v2.py` | 2.0 | Test C: does a window longer than 5 frames help predict the next departure? |
 | `scripts/compare_rollout_timing_v2.py` | 2.0 | Rolls out the published Bubbleformer-S and compares its departure timing and heat flux with the simulation. |
 
 ## Result file names

@@ -8,7 +8,7 @@
 #   Twall_<T>_vapor.npy      bool (frames, 512, 512): dfun > 0 at full resolution, for the departure detector
 #   Twall_<T>_fields128.npy  float16 (frames, 4, 128, 128): dfun, temperature, velx, vely, each averaged over 4 x 4 cells, for the departure probe
 # Outputs that already exist are skipped.
-import os, sys, time, urllib.request, fsspec, h5py, numpy as np
+import os, sys, time, urllib.request, aiohttp, fsspec, h5py, numpy as np
 
 BASE_URL = "https://huggingface.co/datasets/hpcforge/BubbleML_2/resolve/main/PoolBoiling-Subcooled-FC72-2D"
 OUT_DIR = "/pub/ynagaraj/bubbleml2/PoolBoiling-Subcooled-FC72-2D"
@@ -34,7 +34,9 @@ for twall in sys.argv[1:]:
     def open_file():
         for attempt in range(RETRIES):
             try:
-                remote_file = fsspec.open(f"{BASE_URL}/{name}.hdf5", "rb", block_size=2**24).open()
+                # A read that gets no data for 120 s raises an error, so the retry below starts again instead of waiting forever.
+                remote_file = fsspec.open(f"{BASE_URL}/{name}.hdf5", "rb", block_size=2**24,
+                                          client_kwargs={"timeout": aiohttp.ClientTimeout(sock_read=120)}).open()
                 return remote_file, h5py.File(remote_file)
             except Exception as e:
                 print(name, f"open: {type(e).__name__}, retry {attempt + 1} of {RETRIES}", flush=True)

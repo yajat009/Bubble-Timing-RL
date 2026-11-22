@@ -1,13 +1,14 @@
 #!/bin/bash
 # Post-training step 0: download the full-resolution frames of the head-training files (CPU only, one file per task).
 #   sbatch scripts/posttrain_download.sbatch          (the 6 default files, as a job array)
+#   sbatch --array=0,2 scripts/posttrain_download.sbatch   (only some files, for example after a failure)
 # Each task saves <DATA>/Twall_<T>_fields512.npy (about 4.2 GB) and can resume after a failure.
 #SBATCH --job-name=pt-download
 #SBATCH --account=eecs195221_class
 #SBATCH --partition=standard
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=8G
-#SBATCH --time=04:00:00
+#SBATCH --time=08:00:00
 #SBATCH --array=0-5
 #SBATCH --output=results/posttrain/logs/download_%A_%a.out
 

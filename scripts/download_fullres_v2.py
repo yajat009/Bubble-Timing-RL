@@ -4,12 +4,20 @@
 # Saves <DATA>/Twall_<T>_fields512.npy, float16, shape (frames, 4, 512, 512), about 4.2 GB per file.
 # The head-training data and the post-training start states need these frames (download_bubbleml_v2.py keeps
 # only the 128 x 128 averages). The download can resume: finished blocks are listed in Twall_<T>_fields512.done.
-import os, sys, time, aiohttp, fsspec, h5py, numpy as np
+import os, signal, sys, time, aiohttp, fsspec, h5py, numpy as np
 
 BASE_URL = "https://huggingface.co/datasets/hpcforge/BubbleML_2/resolve/main/PoolBoiling-Subcooled-FC72-2D"
 OUT_DIR = "/pub/ynagaraj/bubbleml2/PoolBoiling-Subcooled-FC72-2D"
 FIELDS = ["dfun", "temperature", "velx", "vely"]
 BLOCK, RETRIES = 100, 5
+BLOCK_TIMEOUT = 600   # seconds. A block that takes longer is read again. (The socket timeout alone did not stop every hang.)
+
+
+def on_timeout(signum, frame):
+    raise TimeoutError(f"no block finished in {BLOCK_TIMEOUT} s")
+
+
+signal.signal(signal.SIGALRM, on_timeout)
 
 
 def open_file(name):
@@ -38,13 +46,18 @@ for twall in sys.argv[1:]:
             continue
         for attempt in range(RETRIES):
             try:
+                signal.alarm(BLOCK_TIMEOUT)
                 for k, field in enumerate(FIELDS):
                     output[i:i + BLOCK, k] = h5_file[field][i:i + BLOCK].astype(np.float16)
+                signal.alarm(0)
                 break
             except Exception as e:
+                signal.alarm(0)
                 print(name, f"frames {i}: {type(e).__name__}, retry {attempt + 1} of {RETRIES}", flush=True)
                 time.sleep(30)
+                signal.alarm(BLOCK_TIMEOUT)   # opening the file again can hang too
                 remote, h5_file = open_file(name)
+                signal.alarm(0)
         else:
             raise RuntimeError(f"{name}: frames {i} failed {RETRIES} times")
         output.flush()

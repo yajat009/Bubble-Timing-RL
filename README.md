@@ -39,6 +39,14 @@ This repository currently holds the **feasibility checks** that come before any 
 | `scripts/rollout_starts_v2.py` | 2.0 | Test D: Bubbleformer rollouts from 4 more start frames, departures against the simulation. |
 | `scripts/dwell_times_v2.py` | 2.0 | Test B: how long the simulation and the rollouts stay quiet or active, and a Markov check. |
 | `scripts/window_sweep_v2.py` | 2.0 | Test C: does a window longer than 5 frames help predict the next departure? |
+| `scripts/fm_head.py` | 2.0 | Post-training: the flow-matching head (a small U-Net on the 128 x 128 grid) and its sampler. |
+| `scripts/posttrain_common.py` | 2.0 | Post-training: rollouts with backbone and head, coarse statistics, reference statistics, rewards R2/R3/R4. |
+| `scripts/download_fullres_v2.py` | 2.0 | Post-training: downloads full-resolution frames of the head-training files. |
+| `scripts/prepare_head_data_v2.py` | 2.0 | Post-training: backbone predictions for the head-training windows, and the head scales. |
+| `scripts/pretrain_head_v2.py` | 2.0 | Post-training: pretrains the head with flow matching on true frames. |
+| `scripts/posttrain_v2.py` | 2.0 | Post-training: DiffusionNFT-style reward post-training of the head (R2, R3 or R4). |
+| `scripts/eval_posttrain_v2.py` | 2.0 | Post-training: long evaluation rollout with a head, saved for `compare_rollout_timing_v2.py`. |
+| `scripts/posttrain_*.sbatch` | 2.0 | Post-training: Slurm jobs for download, data and pretraining, and one reward run with its evaluation. |
 | `scripts/compare_rollout_timing_v2.py` | 2.0 | Rolls out the published Bubbleformer-S and compares its departure timing and heat flux with the simulation. |
 
 ## Result file names

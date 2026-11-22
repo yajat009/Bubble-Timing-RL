@@ -17,20 +17,26 @@ DEBOUNCE_TIME = 1.0  # time units. A new event within this time of an earlier ev
 DEBOUNCE_PX = 10     # pixels. "The same place" means within this x distance.
 
 
-def label_blobs(frame):
+def label_blobs(frame, wall_rows=WALL_ROWS):
     """Label each connected vapor region (blob). Return the label image and the labels of blobs on the wall."""
     labels, _ = ndimage.label(frame)
-    wall_labels = np.unique(labels[:WALL_ROWS][labels[:WALL_ROWS] > 0])
+    wall_labels = np.unique(labels[:wall_rows][labels[:wall_rows] > 0])
     return labels, wall_labels
 
 
-def find_departures(vapor, frame_dt):
+def find_departures(vapor, frame_dt, cell=1):
     """Find departures in a vapor mask of shape (T, Y, X).
 
     frame_dt is the time between frames, in time units. It sets the debounce window.
+    cell is the size of one grid cell in 512 x 512 pixels: 1 for the full grid, 4 for a 128 x 128 grid.
+    The pixel thresholds are scaled by cell, so a coarse grid gives a fast, approximate detector.
     Returns (departures, n_raw): a list of (frame, x pixel) after the debounce,
-    and the number of raw events before the debounce.
+    and the number of raw events before the debounce. x is in cells of the given grid.
     """
+    wall_rows = max(1, round(WALL_ROWS / cell))
+    grow = max(1, round(GROW / cell))
+    min_area = MIN_AREA / cell ** 2
+    debounce_px = DEBOUNCE_PX / cell
     debounce_frames = round(DEBOUNCE_TIME / frame_dt)
     # A departure at frame t means: a bubble was attached to the wall at frame t-1,
     # and at frame t its main body is off the wall. The main body is the blob that overlaps
@@ -39,14 +45,14 @@ def find_departures(vapor, frame_dt):
     # - If the main body is much smaller than the old bubble, the bubble collapsed or broke up.
     #   We do not count that as a departure.
     events = []  # (frame, x pixel)
-    prev_labels, prev_wall_labels = label_blobs(vapor[0])
+    prev_labels, prev_wall_labels = label_blobs(vapor[0], wall_rows)
     for t in range(1, len(vapor)):
-        labels, wall_labels = label_blobs(vapor[t])
+        labels, wall_labels = label_blobs(vapor[t], wall_rows)
         for blob_label in prev_wall_labels:
             blob = prev_labels == blob_label
-            if blob.sum() < MIN_AREA:
+            if blob.sum() < min_area:
                 continue
-            overlapping = labels[ndimage.binary_dilation(blob, iterations=GROW) & (labels > 0)]
+            overlapping = labels[ndimage.binary_dilation(blob, iterations=grow) & (labels > 0)]
             if len(overlapping) == 0:
                 continue
             main_body = np.bincount(overlapping).argmax()
@@ -60,7 +66,7 @@ def find_departures(vapor, frame_dt):
     # debounce_frames in time, so a bubble that bounces many times still gives one departure.
     kept, seen = [], []
     for t, x in sorted(events):
-        if not any(t - seen_t <= debounce_frames and abs(x - seen_x) <= DEBOUNCE_PX for seen_t, seen_x in seen):
+        if not any(t - seen_t <= debounce_frames and abs(x - seen_x) <= debounce_px for seen_t, seen_x in seen):
             kept.append((t, x))
         seen.append((t, x))
     return kept, len(events)

@@ -1,0 +1,87 @@
+Tesla V100-FHHL-16GB, 16384 MiB
+Twall 90: 379 windows; departures from frame 105: coarse detector 90, full-resolution detector 88
+Twall 94: 379 windows; departures from frame 105: coarse detector 156, full-resolution detector 163
+Twall 98: 379 windows; departures from frame 105: coarse detector 188, full-resolution detector 191
+Twall 102: 379 windows; departures from frame 105: coarse detector 203, full-resolution detector 206
+Twall 106: 379 windows; departures from frame 105: coarse detector 202, full-resolution detector 208
+Twall 110: 379 windows; departures from frame 105: coarse detector 223, full-resolution detector 228
+normalization values {"field_mean": [-3.0247254371643066, 51.83046340942383, -0.025695232674479485, -0.0018233826849609613], "field_std": [2.5549259185791016, 2.798576593399048, 0.5701021552085876, 0.6770686507225037], "residual_std": [0.08172706514596939, 0.4585716426372528, 0.04958682879805565, 0.04975096881389618], "twall_mean": 100.0, "twall_std": 6.831300510639732, "twalls": [90, 94, 98, 102, 106, 110]}
+2046 training and 228 validation windows
+head: 3.90M parameters
+epoch 0: train loss 1.8962, validation loss 1.9700, 13 s
+epoch 1: train loss 1.6146, validation loss 1.6320, 23 s
+epoch 2: train loss 1.2857, validation loss 1.3521, 35 s
+epoch 3: train loss 1.0914, validation loss 1.1932, 48 s
+epoch 4: train loss 0.9455, validation loss 1.0491, 63 s
+epoch 5: train loss 0.8435, validation loss 0.9612, 79 s
+epoch 6: train loss 0.7848, validation loss 0.8986, 95 s
+epoch 7: train loss 0.7382, validation loss 0.8775, 110 s
+epoch 8: train loss 0.6845, validation loss 0.7918, 126 s
+epoch 9: train loss 0.6729, validation loss 0.7785, 143 s
+epoch 10: train loss 0.6452, validation loss 0.7180, 159 s
+epoch 11: train loss 0.6342, validation loss 0.7327, 176 s
+epoch 12: train loss 0.6307, validation loss 0.7021, 193 s
+epoch 13: train loss 0.6061, validation loss 0.7139, 211 s
+epoch 14: train loss 0.6191, validation loss 0.7054, 229 s
+epoch 15: train loss 0.5878, validation loss 0.6894, 246 s
+epoch 16: train loss 0.5886, validation loss 0.7033, 263 s
+epoch 17: train loss 0.5817, validation loss 0.6647, 280 s
+epoch 18: train loss 0.5686, validation loss 0.6738, 297 s
+epoch 19: train loss 0.5715, validation loss 0.6692, 314 s
+epoch 20: train loss 0.5627, validation loss 0.6512, 330 s
+epoch 21: train loss 0.5593, validation loss 0.6211, 346 s
+epoch 22: train loss 0.5722, validation loss 0.6266, 362 s
+epoch 23: train loss 0.5562, validation loss 0.6229, 379 s
+epoch 24: train loss 0.5553, validation loss 0.6094, 396 s
+epoch 25: train loss 0.5510, validation loss 0.6059, 414 s
+epoch 26: train loss 0.5446, validation loss 0.5931, 432 s
+epoch 27: train loss 0.5418, validation loss 0.5964, 450 s
+epoch 28: train loss 0.5421, validation loss 0.5973, 467 s
+epoch 29: train loss 0.5322, validation loss 0.5887, 485 s
+epoch 30: train loss 0.5363, validation loss 0.5985, 501 s
+epoch 31: train loss 0.5325, validation loss 0.5948, 517 s
+epoch 32: train loss 0.5353, validation loss 0.5916, 533 s
+epoch 33: train loss 0.5352, validation loss 0.5901, 550 s
+epoch 34: train loss 0.5351, validation loss 0.5919, 566 s
+epoch 35: train loss 0.5331, validation loss 0.5899, 583 s
+epoch 36: train loss 0.5319, validation loss 0.5881, 599 s
+epoch 37: train loss 0.5357, validation loss 0.5888, 616 s
+epoch 38: train loss 0.5372, validation loss 0.5885, 633 s
+epoch 39: train loss 0.5272, validation loss 0.5884, 651 s
+saved /pub/ynagaraj/bubble_posttrain/head_pretrained.pt
+saved /pub/ynagaraj/bubbleml2/PoolBoiling-Subcooled-FC72-2D/Twall_97_rollout_head (1, 1895, 512, 512)
+# Bubbleformer rollout vs simulation, Twall 97
+
+Frames 105-1999 (1895 frames, 189.5 time units). Rollout starts from simulation frames 100-104. Checkpoint: `Bubbleformer-S-PB-Subcooled.ckpt`.
+
+| Statistic | Bubbleformer rollout | simulation Twall 97 | simulation, second half vs first half | simulation Twall 96 | simulation Twall 98 |
+|---|---|---|---|---|---|
+| departures | 47 | 157 | 82 | 149 | 191 |
+| departures per 100 frames | 2.48 | 8.28 | 8.65 | 7.86 | 10.1 |
+| mean interval (frames) | 40.8 | 12 | 11.5 | 12.8 | 9.86 |
+| interval coefficient of variation | 1.38 | 0.801 | 0.874 | 0.821 | 0.814 |
+| interval distance to simulation (frames) | 26.6 | 0 | 2.08 | 1.01 | 2.14 |
+| heat-flux mean | 4.64e+04 | 4.73e+04 | 4.72e+04 | 4.64e+04 | 4.97e+04 |
+| heat-flux std | 5.55e+03 | 5.8e+03 | 5.75e+03 | 5.54e+03 | 6.21e+03 |
+| heat-flux histogram distance to simulation | 859 | 0 | 409 | 909 | 2.48e+03 |
+| heat-flux autocorrelation RMS difference to simulation | 0.182 | 0 | 0.119 | 0.0693 | 0.113 |
+| heat flux around departures, RMS difference to simulation | 1.77e+03 | 0 | 840 | 1.34e+03 | 2.13e+03 |
+| vapor fraction | 0.0195 | 0.0263 | 0.0278 | 0.0258 | 0.0288 |
+saved /pub/ynagaraj/bubbleml2/PoolBoiling-Subcooled-FC72-2D/Twall_107_rollout_head (1, 1895, 512, 512)
+# Bubbleformer rollout vs simulation, Twall 107
+
+Frames 105-1999 (1895 frames, 189.5 time units). Rollout starts from simulation frames 100-104. Checkpoint: `Bubbleformer-S-PB-Subcooled.ckpt`.
+
+| Statistic | Bubbleformer rollout | simulation Twall 107 | simulation, second half vs first half | simulation Twall 106 | simulation Twall 108 |
+|---|---|---|---|---|---|
+| departures | 113 | 222 | 121 | 208 | 232 |
+| departures per 100 frames | 5.96 | 11.7 | 12.8 | 11 | 12.2 |
+| mean interval (frames) | 16.8 | 8.43 | 7.59 | 9.08 | 8.15 |
+| interval coefficient of variation | 1.11 | 0.79 | 0.777 | 0.698 | 0.8 |
+| interval distance to simulation (frames) | 8.11 | 0 | 1.73 | 0.841 | 0.34 |
+| heat-flux mean | 6.45e+04 | 6.06e+04 | 6.14e+04 | 5.99e+04 | 6.29e+04 |
+| heat-flux std | 7.62e+03 | 7.64e+03 | 7.58e+03 | 6.84e+03 | 7.33e+03 |
+| heat-flux histogram distance to simulation | 3.87e+03 | 0 | 1.59e+03 | 1.01e+03 | 2.31e+03 |
+| heat-flux autocorrelation RMS difference to simulation | 0.11 | 0 | 0.0659 | 0.0416 | 0.0464 |
+| heat flux around departures, RMS difference to simulation | 3.42e+03 | 0 | 1.56e+03 | 1.36e+03 | 1.88e+03 |
+| vapor fraction | 0.0259 | 0.035 | 0.0369 | 0.0344 | 0.0411 |

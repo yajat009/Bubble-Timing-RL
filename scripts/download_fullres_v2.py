@@ -29,27 +29,27 @@ for twall in sys.argv[1:]:
     name = f"Twall_{twall}"
     path, done_path = f"{OUT_DIR}/{name}_fields512.npy", f"{OUT_DIR}/{name}_fields512.done"
     done = set(int(l) for l in open(done_path)) if os.path.exists(done_path) else set()
-    remote, f = open_file(name)
-    T, H, W = f["dfun"].shape
-    out = np.lib.format.open_memmap(path, mode="r+" if os.path.exists(path) else "w+",
-                                    dtype=np.float16, shape=(T, len(FIELDS), H, W))
-    for i in range(0, T, BLOCK):
+    remote, h5_file = open_file(name)
+    n_frames, height, width = h5_file["dfun"].shape
+    output = np.lib.format.open_memmap(path, mode="r+" if os.path.exists(path) else "w+",
+                                    dtype=np.float16, shape=(n_frames, len(FIELDS), height, width))
+    for i in range(0, n_frames, BLOCK):
         if i in done:
             continue
         for attempt in range(RETRIES):
             try:
                 for k, field in enumerate(FIELDS):
-                    out[i:i + BLOCK, k] = f[field][i:i + BLOCK].astype(np.float16)
+                    output[i:i + BLOCK, k] = h5_file[field][i:i + BLOCK].astype(np.float16)
                 break
             except Exception as e:
                 print(name, f"frames {i}: {type(e).__name__}, retry {attempt + 1} of {RETRIES}", flush=True)
                 time.sleep(30)
-                remote, f = open_file(name)
+                remote, h5_file = open_file(name)
         else:
             raise RuntimeError(f"{name}: frames {i} failed {RETRIES} times")
-        out.flush()
+        output.flush()
         with open(done_path, "a") as fd:
             fd.write(f"{i}\n")
-        print(name, f"frames {i}-{min(i + BLOCK, T) - 1} of {T}", flush=True)
-    f.close(); remote.close()
-    print(name, "saved", out.shape, flush=True)
+        print(name, f"frames {i}-{min(i + BLOCK, n_frames) - 1} of {n_frames}", flush=True)
+    h5_file.close(); remote.close()
+    print(name, "saved", output.shape, flush=True)

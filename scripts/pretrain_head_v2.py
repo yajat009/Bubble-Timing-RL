@@ -1,75 +1,83 @@
-# Pretrain the flow-matching head on true frames (step 1 of the training plan; run on a GPU node from the repo root).
+# Pretrain the flow-matching head on true frames, before any reward (run on a GPU node, from the repo root).
 # Usage: PYTHONPATH=scripts python scripts/pretrain_head_v2.py --twalls 90 94 ...
 #
-# Training pairs (from prepare_head_data_v2.py and the 128 x 128 simulation fields):
+# Each training pair is one 5-frame window of a training file:
 #   condition = backbone prediction of the next 5 frames, the last input frame, and the wall temperature;
 #   target    = residual = true next 5 frames - backbone prediction, on the 128 x 128 grid.
-# The last 10% of the windows of each file are held out to measure the validation loss.
-# Saves <OUT>/head_pretrained.pt with the head weights and the scales.
+# The backbone predictions come from prepare_head_data_v2.py; the true frames come from Twall_<T>_fields128.npy.
+# The last 10% of the windows of each file are held out, to measure a validation loss after each epoch.
+# Saves <OUT>/head_pretrained.pt: the head weights, its width, the normalization values and the training files.
 import argparse, json, os, time
 import numpy as np, torch
-from fm_head import Head, Scales, cfm_loss
+from flow_matching_head import ResidualHead, Normalizer, flow_matching_loss
 
-p = argparse.ArgumentParser()
-p.add_argument("--twalls", type=int, nargs="+", required=True)
-p.add_argument("--data", default="/pub/ynagaraj/bubbleml2/PoolBoiling-Subcooled-FC72-2D")
-p.add_argument("--head-data", default="/pub/ynagaraj/bubble_posttrain/head_data")
-p.add_argument("--out", default="/pub/ynagaraj/bubble_posttrain")
-p.add_argument("--epochs", type=int, default=40)
-p.add_argument("--batch", type=int, default=16)
-p.add_argument("--lr", type=float, default=2e-4)
-p.add_argument("--width", type=int, default=64)
-args = p.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument("--twalls", type=int, nargs="+", required=True)
+parser.add_argument("--data", default="/pub/ynagaraj/bubbleml2/PoolBoiling-Subcooled-FC72-2D")
+parser.add_argument("--head-data", default="/pub/ynagaraj/bubble_posttrain/head_data")
+parser.add_argument("--out", default="/pub/ynagaraj/bubble_posttrain")
+parser.add_argument("--epochs", type=int, default=40)
+parser.add_argument("--batch", type=int, default=16)
+parser.add_argument("--lr", type=float, default=2e-4)
+parser.add_argument("--width", type=int, default=64, help="channels of the first U-Net level")
+args = parser.parse_args()
 
-W, START = 5, 100
-dev = "cuda" if torch.cuda.is_available() else "cpu"
+FRAMES, START_FRAME = 5, 100
+device = "cuda" if torch.cuda.is_available() else "cpu"
 torch.manual_seed(0); np.random.seed(0)
-scales = Scales(json.load(open(f"{args.head_data}/scales.json"))).to(dev)
+normalizer = Normalizer(json.load(open(f"{args.head_data}/scales.json"))).to(device)
 
-# Load every window into CPU memory as float16: pred (N, 5, 4, 128, 128), truth (same), last (N, 4, 128, 128), twall (N,).
-pred, truth, last, twall, val = [], [], [], [], []
+# Load every window into CPU memory as float16.
+predictions, truths, last_inputs, wall_temps, is_validation = [], [], [], [], []
 for t in args.twalls:
-    p128 = np.load(f"{args.head_data}/Twall_{t}_pred128.npy")
-    f128 = np.load(f"{args.data}/Twall_{t}_fields128.npy", mmap_mode="r")
-    starts = START + W * np.arange(len(p128))
-    pred.append(p128); truth.append(np.stack([f128[k + W:k + 2 * W] for k in starts]))
-    last.append(np.stack([f128[k + W - 1] for k in starts])); twall.append(np.full(len(p128), float(t)))
-    val.append(np.arange(len(p128)) >= int(0.9 * len(p128)))
-pred, truth, last = (torch.from_numpy(np.concatenate(a)) for a in (pred, truth, last))
-twall, val = torch.from_numpy(np.concatenate(twall)).float(), torch.from_numpy(np.concatenate(val))
-train_idx, val_idx = torch.nonzero(~val)[:, 0], torch.nonzero(val)[:, 0]
-print(f"{len(train_idx)} training and {len(val_idx)} validation windows", flush=True)
+    prediction = np.load(f"{args.head_data}/Twall_{t}_pred128.npy")              # (windows, 5, 4, 128, 128)
+    fields = np.load(f"{args.data}/Twall_{t}_fields128.npy", mmap_mode="r")
+    first = START_FRAME + FRAMES * np.arange(len(prediction))                      # first input frame of each window
+    predictions.append(prediction)
+    truths.append(np.stack([fields[f + FRAMES:f + 2 * FRAMES] for f in first]))
+    last_inputs.append(np.stack([fields[f + FRAMES - 1] for f in first]))
+    wall_temps.append(np.full(len(prediction), float(t)))
+    is_validation.append(np.arange(len(prediction)) >= int(0.9 * len(prediction)))
+predictions, truths, last_inputs = (torch.from_numpy(np.concatenate(a)) for a in (predictions, truths, last_inputs))
+wall_temps = torch.from_numpy(np.concatenate(wall_temps)).float()
+is_validation = torch.from_numpy(np.concatenate(is_validation))
+train_windows, validation_windows = torch.nonzero(~is_validation)[:, 0], torch.nonzero(is_validation)[:, 0]
+print(f"{len(train_windows)} training and {len(validation_windows)} validation windows", flush=True)
 
 
-def batch(idx):
-    """Normalized residuals x and conditions c for the windows idx, on the GPU."""
-    pr, tr, la = (a[idx].to(dev).float() for a in (pred, truth, last))
-    return scales.from_residual(tr - pr), scales.condition(pr, la, twall[idx].to(dev))
+def make_batch(windows):
+    """Normalized residuals and conditions for the given window indices, on the GPU."""
+    prediction, truth, last_input = (a[windows].to(device).float() for a in (predictions, truths, last_inputs))
+    condition = normalizer.build_condition(prediction, last_input, wall_temps[windows].to(device))
+    return normalizer.to_normalized_residual(truth - prediction), condition
 
 
-head = Head(args.width).to(dev)
-opt = torch.optim.AdamW(head.parameters(), args.lr, weight_decay=1e-4)
-steps = args.epochs * (len(train_idx) // args.batch)
-sched = torch.optim.lr_scheduler.OneCycleLR(opt, args.lr, total_steps=steps, pct_start=0.05)
+head = ResidualHead(args.width).to(device)
+optimizer = torch.optim.AdamW(head.parameters(), args.lr, weight_decay=1e-4)
+total_steps = args.epochs * (len(train_windows) // args.batch)
+schedule = torch.optim.lr_scheduler.OneCycleLR(optimizer, args.lr, total_steps=total_steps, pct_start=0.05)
 print(f"head: {sum(p.numel() for p in head.parameters()) / 1e6:.2f}M parameters", flush=True)
 t0 = time.time()
 for epoch in range(args.epochs):
     head.train()
-    losses = []
-    for b in torch.randperm(len(train_idx)).split(args.batch):
-        if len(b) < args.batch:
+    train_losses = []
+    for positions in torch.randperm(len(train_windows)).split(args.batch):
+        if len(positions) < args.batch:
             continue
-        loss = cfm_loss(head, *batch(train_idx[b]))
-        opt.zero_grad(); loss.backward(); torch.nn.utils.clip_grad_norm_(head.parameters(), 1.0); opt.step(); sched.step()
-        losses.append(loss.item())
+        loss = flow_matching_loss(head, *make_batch(train_windows[positions]))
+        optimizer.zero_grad(); loss.backward()
+        torch.nn.utils.clip_grad_norm_(head.parameters(), 1.0); optimizer.step(); schedule.step()
+        train_losses.append(loss.item())
     head.eval()
-    torch.manual_seed(1)   # the same noise every epoch, so validation losses are comparable
+    torch.manual_seed(1)   # the same random noise for every validation pass, so the losses are comparable
     with torch.no_grad():
-        v = np.mean([cfm_loss(head, *batch(b)).item() for b in val_idx.split(args.batch)])
-    print(f"epoch {epoch}: train {np.mean(losses):.4f}, validation {v:.4f}, {time.time() - t0:.0f} s", flush=True)
+        validation_loss = np.mean([flow_matching_loss(head, *make_batch(windows)).item()
+                                   for windows in validation_windows.split(args.batch)])
+    print(f"epoch {epoch}: train loss {np.mean(train_losses):.4f}, validation loss {validation_loss:.4f}, "
+          f"{time.time() - t0:.0f} s", flush=True)
     torch.manual_seed(epoch + 2)
 
 os.makedirs(args.out, exist_ok=True)
-torch.save({"head": head.state_dict(), "width": args.width, "scales": scales.d, "twalls": args.twalls},
+torch.save({"head": head.state_dict(), "width": args.width, "scales": normalizer.values, "twalls": args.twalls},
            f"{args.out}/head_pretrained.pt")
 print("saved", f"{args.out}/head_pretrained.pt")

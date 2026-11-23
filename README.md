@@ -46,6 +46,7 @@ This repository currently holds the **feasibility checks** that come before any 
 | `scripts/pretrain_head_v2.py` | 2.0 | Post-training: pretrains the head with flow matching on true frames. |
 | `scripts/posttrain_v2.py` | 2.0 | Post-training: DiffusionNFT-style reward post-training of the head (R2, R3 or R4). |
 | `scripts/eval_posttrain_v2.py` | 2.0 | Post-training: long evaluation rollout with a head, saved for `compare_rollout_timing_v2.py`. |
+| `scripts/eval_seeds_v2.py` | 2.0 | Post-training: spread of the evaluation numbers over random seeds of the same head. |
 | `scripts/posttrain_*.sbatch` | 2.0 | Post-training: Slurm jobs for download, data and pretraining, and one reward run with its evaluation. |
 | `scripts/compare_rollout_timing_v2.py` | 2.0 | Rolls out the published Bubbleformer-S and compares its departure timing and heat flux with the simulation. |
 

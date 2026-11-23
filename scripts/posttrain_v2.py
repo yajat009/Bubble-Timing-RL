@@ -48,6 +48,10 @@ parser.add_argument("--lambda-ref", type=float, default=0.01)
 parser.add_argument("--ema", type=float, default=0.9, help="sampling head <- ema * sampling head + (1 - ema) * head")
 parser.add_argument("--data", default=DATA)
 parser.add_argument("--work", default="/pub/ynagaraj/bubble_posttrain")
+parser.add_argument("--fixed-starts", type=int, default=0,
+                    help="if > 0: draw this many (file, start frame) pairs once and cycle through them, so that the "
+                         "reward of the same start can be compared across cycles; 0 = a new random start every iteration")
+parser.add_argument("--name", default=None, help="name of the run folder; default: <reward>_seed<seed>")
 args = parser.parse_args()
 
 FRAMES, START_FRAME = 5, 100
@@ -91,15 +95,24 @@ def supervised_batch(size):
 
 
 start_frames = {t: np.load(f"{args.data}/Twall_{t}_fields512.npy", mmap_mode="r") for t in train_walls}
-run_dir = f"{args.work}/runs/{args.reward}_seed{args.seed}"
+# Fixed start states: the same number from each training file, spread over the file.
+fixed_starts = []
+for k in range(args.fixed_starts):
+    t = train_walls[k % len(train_walls)]
+    last_start = len(start_frames[t]) - rollout_frames - FRAMES
+    fixed_starts.append((t, int(np.random.randint(START_FRAME, last_start))))
+run_dir = f"{args.work}/runs/{args.name or f'{args.reward}_seed{args.seed}'}"
 os.makedirs(run_dir, exist_ok=True)
 log_file = open(f"{run_dir}/log.jsonl", "a")
 t0 = time.time()
 for iteration in range(args.iters):
     # 1-2. One start state, a group of rollouts from it with the sampling head.
-    wall_temp = int(np.random.choice(train_walls))
+    if args.fixed_starts:
+        wall_temp, start = fixed_starts[iteration % len(fixed_starts)]
+    else:
+        wall_temp = int(np.random.choice(train_walls))
+        start = int(np.random.randint(START_FRAME, len(start_frames[wall_temp]) - rollout_frames - FRAMES))
     metadata = load_metadata(wall_temp, args.data)
-    start = int(np.random.randint(START_FRAME, len(start_frames[wall_temp]) - rollout_frames - FRAMES))
     frames = torch.from_numpy(start_frames[wall_temp][start:start + FRAMES].astype(np.float32)).to(device)
     frames = frames[None].expand(args.group, -1, -1, -1, -1).contiguous()
     fluid = fluid_params(metadata).to(device).expand(args.group, -1)

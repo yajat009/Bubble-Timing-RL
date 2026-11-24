@@ -62,3 +62,36 @@ departure rate stayed at about 0.6 of the simulation rate during training (R2: 0
 2. Make the training signal stronger before more runs: a fixed set of start states, more iterations, and a check that
    the reward rises on the training files (for example, a higher learning rate or beta).
 3. Run R4 (snapshot and timing together), and repeat R2, R3 and R4 with 3 seeds once the reward rises.
+
+## Round 2: evaluation spread and calibration (jobs 59939257, 59939258)
+
+### Evaluation spread over seeds (measured, `eval_seeds.md`)
+
+Four evaluation rollouts per head (seeds 0-3), coarse statistics, mean +- standard deviation. Departures per 100 frames:
+
+| Head | Twall 97 (simulation 7.91) | Twall 107 (simulation 12.13) |
+|---|---|---|
+| S (not random, 1 rollout) | 1.53 | 7.28 |
+| pretrained head | 2.94 +- 0.41 | 6.68 +- 0.58 |
+| R2, first run | 3.42 +- 0.40 | 6.36 +- 1.1 |
+| R3, first run | 3.28 +- 0.45 | **9.20 +- 0.86** |
+
+Waiting-time W1 at Twall 107: head 6.91 +- 1.4, R2 8.04 +- 3.0, R3 **2.69 +- 0.82** frames.
+
+**Interpretation.** At Twall 107, R3 is better than the pretrained head and R2 by about 3 standard deviations, so that
+difference is real. At Twall 97, the three heads differ by about 1 standard deviation, so they cannot be ranked yet.
+All heads are better than the backbone alone at Twall 97.
+
+### Calibration of the update (measured, `train_log_R3_calibrate.jsonl`)
+
+R3 with a stronger update: learning rate 3e-4 (was 5e-5), beta 0.5 (was 0.1), 4 passes over 32 kept steps (was 2 over 24),
+ema 0.5 (was 0.9), lambda_sup 0.02 (was 0.1), 12 fixed start states that repeat every 12 iterations, 500-frame rollouts.
+The job stopped after 28 of 48 iterations because of a storage error on HPC3 (`OSError: Remote I/O error` on `/pub`).
+
+- Mean departure rate of the rollouts, as a fraction of the simulation rate, per cycle of 12 starts: **0.57, 0.67, 0.71**.
+  It rose on 9 of the 12 starts.
+- The mean reward did not rise (-13.7, -20.3, -19.0), because 2 rollout groups received very large penalties (-68 and -77).
+  On the same start, the reward rose in 10 of 16 cases.
+
+**Interpretation.** The stronger update moves the departure rate toward the simulation on the training files, which the
+first run did not do. These settings are now the defaults of `scripts/posttrain_v2.py`.

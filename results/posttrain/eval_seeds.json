@@ -1,0 +1,202 @@
+{
+ "97/S": [
+  {
+   "heat_flux_histogram": 3101.817855739797,
+   "vapor_fraction": 0.0032238927787909093,
+   "departure_rate": 1.5303430079155673,
+   "waiting_times": 43.54764999999998,
+   "quiet_periods": 39.10059999999999
+  }
+ ],
+ "97/head": [
+  {
+   "heat_flux_histogram": 864.8844548150524,
+   "vapor_fraction": 0.006180957525657664,
+   "departure_rate": 2.4274406332453826,
+   "waiting_times": 26.979200000000002,
+   "quiet_periods": 20.5852
+  },
+  {
+   "heat_flux_histogram": 12852.700036615111,
+   "vapor_fraction": 0.00244396332834566,
+   "departure_rate": 3.5356200527704487,
+   "waiting_times": 14.580100000000005,
+   "quiet_periods": 7.0594
+  },
+  {
+   "heat_flux_histogram": 4780.58265184949,
+   "vapor_fraction": 0.004240522684793548,
+   "departure_rate": 3.0606860158311346,
+   "waiting_times": 20.148799999999998,
+   "quiet_periods": 5.3326
+  },
+  {
+   "heat_flux_histogram": 448.5265079958544,
+   "vapor_fraction": 0.005025186788520462,
+   "departure_rate": 2.7440633245382586,
+   "waiting_times": 19.3316,
+   "quiet_periods": 17.852200000000007
+  }
+ ],
+ "97/R2": [
+  {
+   "heat_flux_histogram": 5825.231792474489,
+   "vapor_fraction": 0.004794766995479566,
+   "departure_rate": 3.905013192612137,
+   "waiting_times": 13.164399999999999,
+   "quiet_periods": 7.054100000000002
+  },
+  {
+   "heat_flux_histogram": 5779.807631536989,
+   "vapor_fraction": 0.005562070703840381,
+   "departure_rate": 2.796833773087071,
+   "waiting_times": 22.6769,
+   "quiet_periods": 9.009699999999999
+  },
+  {
+   "heat_flux_histogram": 10300.737237005738,
+   "vapor_fraction": 0.00033839537608642417,
+   "departure_rate": 3.3773087071240107,
+   "waiting_times": 16.5782,
+   "quiet_periods": 6.7453499999999975
+  },
+  {
+   "heat_flux_histogram": 34404.23831044321,
+   "vapor_fraction": 0.0027223486150910157,
+   "departure_rate": 3.588390501319261,
+   "waiting_times": 14.747500000000002,
+   "quiet_periods": 4.6102
+  }
+ ],
+ "97/R3": [
+  {
+   "heat_flux_histogram": 12953.964528411985,
+   "vapor_fraction": 0.0025628842042236012,
+   "departure_rate": 3.7994722955145117,
+   "waiting_times": 11.1721,
+   "quiet_periods": 7.146700000000002
+  },
+  {
+   "heat_flux_histogram": 14466.340290911989,
+   "vapor_fraction": 0.004484670308692599,
+   "departure_rate": 3.271767810026385,
+   "waiting_times": 17.765600000000003,
+   "quiet_periods": 12.8442
+  },
+  {
+   "heat_flux_histogram": 8676.64659638074,
+   "vapor_fraction": 0.007911038485007928,
+   "departure_rate": 2.5857519788918206,
+   "waiting_times": 24.444050000000008,
+   "quiet_periods": 6.8158
+  },
+  {
+   "heat_flux_histogram": 11967.98739911511,
+   "vapor_fraction": 0.007936354386228243,
+   "departure_rate": 3.4828496042216357,
+   "waiting_times": 15.6768,
+   "quiet_periods": 3.635399999999999
+  }
+ ],
+ "97/simulation_rate": 7.9113924050632916,
+ "107/S": [
+  {
+   "heat_flux_histogram": 566.6173589843743,
+   "vapor_fraction": 0.001879948588560977,
+   "departure_rate": 7.282321899736147,
+   "waiting_times": 5.5478,
+   "quiet_periods": 4.3683499999999995
+  }
+ ],
+ "107/head": [
+  {
+   "heat_flux_histogram": 3891.641577782205,
+   "vapor_fraction": 0.00855525945274839,
+   "departure_rate": 6.596306068601583,
+   "waiting_times": 6.808899999999999,
+   "quiet_periods": 4.608250000000007
+  },
+  {
+   "heat_flux_histogram": 1688.8905273915805,
+   "vapor_fraction": 0.007486194066864488,
+   "departure_rate": 5.75197889182058,
+   "waiting_times": 9.2222,
+   "quiet_periods": 2.1211499999999965
+  },
+  {
+   "heat_flux_histogram": 2629.17176020408,
+   "vapor_fraction": 0.006492528839704196,
+   "departure_rate": 7.124010554089709,
+   "waiting_times": 5.941100000000001,
+   "quiet_periods": 1.763849999999996
+  },
+  {
+   "heat_flux_histogram": 2543.1375824697043,
+   "vapor_fraction": 0.01111815626178533,
+   "departure_rate": 7.229551451187335,
+   "waiting_times": 5.66755,
+   "quiet_periods": 3.11275
+  }
+ ],
+ "107/R2": [
+  {
+   "heat_flux_histogram": 2133.5712176259535,
+   "vapor_fraction": 0.01209523409819694,
+   "departure_rate": 5.75197889182058,
+   "waiting_times": 9.162650000000003,
+   "quiet_periods": 2.1386999999999987
+  },
+  {
+   "heat_flux_histogram": 2631.1899141103304,
+   "vapor_fraction": 0.009764045423229922,
+   "departure_rate": 4.802110817941952,
+   "waiting_times": 12.4698,
+   "quiet_periods": 2.033649999999998
+  },
+  {
+   "heat_flux_histogram": 5415.826787547831,
+   "vapor_fraction": 0.0010830425270392866,
+   "departure_rate": 7.282321899736147,
+   "waiting_times": 5.575,
+   "quiet_periods": 7.514949999999998
+  },
+  {
+   "heat_flux_histogram": 6755.84829692283,
+   "vapor_fraction": 0.004196447457778075,
+   "departure_rate": 7.598944591029023,
+   "waiting_times": 4.9376,
+   "quiet_periods": 4.003249999999998
+  }
+ ],
+ "107/R3": [
+  {
+   "heat_flux_histogram": 565.3490093431134,
+   "vapor_fraction": 0.0013062503283367,
+   "departure_rate": 9.129287598944591,
+   "waiting_times": 2.828000000000001,
+   "quiet_periods": 1.3732499999999999
+  },
+  {
+   "heat_flux_histogram": 3393.918384032205,
+   "vapor_fraction": 0.00440313228537826,
+   "departure_rate": 10.395778364116095,
+   "waiting_times": 1.51395,
+   "quiet_periods": 5.565599999999998
+  },
+  {
+   "heat_flux_histogram": 1485.0476171874977,
+   "vapor_fraction": 0.010414821403534592,
+   "departure_rate": 9.287598944591029,
+   "waiting_times": 2.6107999999999993,
+   "quiet_periods": 2.6384499999999975
+  },
+  {
+   "heat_flux_histogram": 15651.455410204082,
+   "vapor_fraction": 0.010180246710675092,
+   "departure_rate": 7.968337730870712,
+   "waiting_times": 3.823099999999998,
+   "quiet_periods": 4.856049999999998
+  }
+ ],
+ "107/simulation_rate": 12.130801687763713
+}

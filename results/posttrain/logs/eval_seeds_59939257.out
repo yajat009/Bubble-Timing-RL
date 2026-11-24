@@ -1,0 +1,48 @@
+Twall 97, S, seed 0: heat_flux_histogram 3.1e+03, vapor_fraction 0.00322, departure_rate 1.53, waiting_times 43.5, quiet_periods 39.1
+Twall 97, head, seed 0: heat_flux_histogram 865, vapor_fraction 0.00618, departure_rate 2.43, waiting_times 27, quiet_periods 20.6
+Twall 97, head, seed 1: heat_flux_histogram 1.29e+04, vapor_fraction 0.00244, departure_rate 3.54, waiting_times 14.6, quiet_periods 7.06
+Twall 97, head, seed 2: heat_flux_histogram 4.78e+03, vapor_fraction 0.00424, departure_rate 3.06, waiting_times 20.1, quiet_periods 5.33
+Twall 97, head, seed 3: heat_flux_histogram 449, vapor_fraction 0.00503, departure_rate 2.74, waiting_times 19.3, quiet_periods 17.9
+Twall 97, R2, seed 0: heat_flux_histogram 5.83e+03, vapor_fraction 0.00479, departure_rate 3.91, waiting_times 13.2, quiet_periods 7.05
+Twall 97, R2, seed 1: heat_flux_histogram 5.78e+03, vapor_fraction 0.00556, departure_rate 2.8, waiting_times 22.7, quiet_periods 9.01
+Twall 97, R2, seed 2: heat_flux_histogram 1.03e+04, vapor_fraction 0.000338, departure_rate 3.38, waiting_times 16.6, quiet_periods 6.75
+Twall 97, R2, seed 3: heat_flux_histogram 3.44e+04, vapor_fraction 0.00272, departure_rate 3.59, waiting_times 14.7, quiet_periods 4.61
+Twall 97, R3, seed 0: heat_flux_histogram 1.3e+04, vapor_fraction 0.00256, departure_rate 3.8, waiting_times 11.2, quiet_periods 7.15
+Twall 97, R3, seed 1: heat_flux_histogram 1.45e+04, vapor_fraction 0.00448, departure_rate 3.27, waiting_times 17.8, quiet_periods 12.8
+Twall 97, R3, seed 2: heat_flux_histogram 8.68e+03, vapor_fraction 0.00791, departure_rate 2.59, waiting_times 24.4, quiet_periods 6.82
+Twall 97, R3, seed 3: heat_flux_histogram 1.2e+04, vapor_fraction 0.00794, departure_rate 3.48, waiting_times 15.7, quiet_periods 3.64
+Twall 107, S, seed 0: heat_flux_histogram 567, vapor_fraction 0.00188, departure_rate 7.28, waiting_times 5.55, quiet_periods 4.37
+Twall 107, head, seed 0: heat_flux_histogram 3.89e+03, vapor_fraction 0.00856, departure_rate 6.6, waiting_times 6.81, quiet_periods 4.61
+Twall 107, head, seed 1: heat_flux_histogram 1.69e+03, vapor_fraction 0.00749, departure_rate 5.75, waiting_times 9.22, quiet_periods 2.12
+Twall 107, head, seed 2: heat_flux_histogram 2.63e+03, vapor_fraction 0.00649, departure_rate 7.12, waiting_times 5.94, quiet_periods 1.76
+Twall 107, head, seed 3: heat_flux_histogram 2.54e+03, vapor_fraction 0.0111, departure_rate 7.23, waiting_times 5.67, quiet_periods 3.11
+Twall 107, R2, seed 0: heat_flux_histogram 2.13e+03, vapor_fraction 0.0121, departure_rate 5.75, waiting_times 9.16, quiet_periods 2.14
+Twall 107, R2, seed 1: heat_flux_histogram 2.63e+03, vapor_fraction 0.00976, departure_rate 4.8, waiting_times 12.5, quiet_periods 2.03
+Twall 107, R2, seed 2: heat_flux_histogram 5.42e+03, vapor_fraction 0.00108, departure_rate 7.28, waiting_times 5.58, quiet_periods 7.51
+Twall 107, R2, seed 3: heat_flux_histogram 6.76e+03, vapor_fraction 0.0042, departure_rate 7.6, waiting_times 4.94, quiet_periods 4
+Twall 107, R3, seed 0: heat_flux_histogram 565, vapor_fraction 0.00131, departure_rate 9.13, waiting_times 2.83, quiet_periods 1.37
+Twall 107, R3, seed 1: heat_flux_histogram 3.39e+03, vapor_fraction 0.0044, departure_rate 10.4, waiting_times 1.51, quiet_periods 5.57
+Twall 107, R3, seed 2: heat_flux_histogram 1.49e+03, vapor_fraction 0.0104, departure_rate 9.29, waiting_times 2.61, quiet_periods 2.64
+Twall 107, R3, seed 3: heat_flux_histogram 1.57e+04, vapor_fraction 0.0102, departure_rate 7.97, waiting_times 3.82, quiet_periods 4.86
+# Evaluation spread over seeds (coarse 128 x 128 statistics)
+
+Mean +- standard deviation over seeds of one 1,895-frame rollout each. departure_rate is per 100 frames; the other columns are distances to the simulation (0 = same).
+
+## Twall 97 (simulation: 7.91 departures per 100 frames)
+
+| Head | Seeds | departure_rate | waiting_times | quiet_periods | heat_flux_histogram | vapor_fraction |
+|---|---|---|---|---|---|---|
+| S | 1 | 1.53 +- 0 | 43.5 +- 0 | 39.1 +- 0 | 3.1e+03 +- 0 | 0.00322 +- 0 |
+| head | 4 | 2.94 +- 0.41 | 20.3 +- 4.4 | 12.7 +- 6.6 | 4.74e+03 +- 5e+03 | 0.00447 +- 0.0014 |
+| R2 | 4 | 3.42 +- 0.4 | 16.8 +- 3.6 | 6.85 +- 1.6 | 1.41e+04 +- 1.2e+04 | 0.00335 +- 0.002 |
+| R3 | 4 | 3.28 +- 0.45 | 17.3 +- 4.8 | 7.61 +- 3.3 | 1.2e+04 +- 2.1e+03 | 0.00572 +- 0.0023 |
+
+## Twall 107 (simulation: 12.13 departures per 100 frames)
+
+| Head | Seeds | departure_rate | waiting_times | quiet_periods | heat_flux_histogram | vapor_fraction |
+|---|---|---|---|---|---|---|
+| S | 1 | 7.28 +- 0 | 5.55 +- 0 | 4.37 +- 0 | 567 +- 0 | 0.00188 +- 0 |
+| head | 4 | 6.68 +- 0.58 | 6.91 +- 1.4 | 2.9 +- 1.1 | 2.69e+03 +- 7.9e+02 | 0.00841 +- 0.0017 |
+| R2 | 4 | 6.36 +- 1.1 | 8.04 +- 3 | 3.92 +- 2.2 | 4.23e+03 +- 1.9e+03 | 0.00678 +- 0.0044 |
+| R3 | 4 | 9.2 +- 0.86 | 2.69 +- 0.82 | 3.61 +- 1.7 | 5.27e+03 +- 6.1e+03 | 0.00658 +- 0.0039 |
+

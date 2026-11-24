@@ -22,7 +22,8 @@
 #        + lambda_sup * flow-matching loss on true training pairs
 #        + lambda_ref * |head - pretrained head|^2
 #   6. Move the sampling copy a small step toward the trained head (exponential moving average).
-# The update follows ReAl and DiffusionNFT, with the proposal's settings (beta 0.1, lambda_sup 0.1, lambda_ref 0.01).
+# The update follows ReAl and DiffusionNFT. The defaults below come from the calibration run (results/posttrain/RESULTS.md):
+# the proposal's first settings (beta 0.1, lambda_sup 0.1, learning rate 5e-5) did not raise the reward in 60 iterations.
 import argparse, copy, json, os, time
 import numpy as np, torch
 from flow_matching_head import ResidualHead, Normalizer, flow_matching_loss
@@ -35,20 +36,20 @@ parser.add_argument("--ckpt", required=True, help="Bubbleformer-S checkpoint")
 parser.add_argument("--reward", choices=list(REWARD_TERMS), required=True)
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--twalls", type=int, nargs="+", default=None, help="training files; default: those of the pretrained head")
-parser.add_argument("--iters", type=int, default=60)
+parser.add_argument("--iters", type=int, default=48)
 parser.add_argument("--group", type=int, default=8, help="rollouts per group")
-parser.add_argument("--bundles", type=int, default=120, help="steps of 5 frames per rollout (120 steps = 600 frames)")
-parser.add_argument("--keep", type=int, default=24, help="steps per rollout kept for the update")
-parser.add_argument("--epochs", type=int, default=2, help="passes over the kept steps per iteration")
+parser.add_argument("--bundles", type=int, default=100, help="steps of 5 frames per rollout (100 steps = 500 frames)")
+parser.add_argument("--keep", type=int, default=32, help="steps per rollout kept for the update")
+parser.add_argument("--epochs", type=int, default=4, help="passes over the kept steps per iteration")
 parser.add_argument("--batch", type=int, default=16)
-parser.add_argument("--lr", type=float, default=5e-5)
-parser.add_argument("--beta", type=float, default=0.1)
-parser.add_argument("--lambda-sup", type=float, default=0.1)
+parser.add_argument("--lr", type=float, default=3e-4)
+parser.add_argument("--beta", type=float, default=0.5)
+parser.add_argument("--lambda-sup", type=float, default=0.02)
 parser.add_argument("--lambda-ref", type=float, default=0.01)
-parser.add_argument("--ema", type=float, default=0.9, help="sampling head <- ema * sampling head + (1 - ema) * head")
+parser.add_argument("--ema", type=float, default=0.5, help="sampling head <- ema * sampling head + (1 - ema) * head")
 parser.add_argument("--data", default=DATA)
 parser.add_argument("--work", default="/pub/ynagaraj/bubble_posttrain")
-parser.add_argument("--fixed-starts", type=int, default=0,
+parser.add_argument("--fixed-starts", type=int, default=12,
                     help="if > 0: draw this many (file, start frame) pairs once and cycle through them, so that the "
                          "reward of the same start can be compared across cycles; 0 = a new random start every iteration")
 parser.add_argument("--name", default=None, help="name of the run folder; default: <reward>_seed<seed>")
